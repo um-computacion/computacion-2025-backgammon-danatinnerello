@@ -5,21 +5,21 @@
 -guardar movimiento
 
 '''
-class tablero:
+class Tablero:
     def __init__(self):
-        self.__contendedor = [0] * 24  
+        self.__contendedor__ = [0] * 24  
         #Al iniciarse 
-        self.__contendedor[0]=-2
-        self.__contendedor[11]=-5
-        self.__contendedor[16]=-3
-        self.__contendedor[18]=-5
-        self.__contendedor[23]=2
-        self.__contendedor[12]=5
-        self.__contendedor[7]=3
-        self.__contendedor[5]=5
+        self.__contendedor__[0]=-2
+        self.__contendedor__[11]=-5
+        self.__contendedor__[16]=-3
+        self.__contendedor__[18]=-5
+        self.__contendedor__[23]=2
+        self.__contendedor__[12]=5
+        self.__contendedor__[7]=3
+        self.__contendedor__[5]=5
 
     def mostrar_contenedor(self):
-        return self.__contendedor
+        return self.__contendedor__
     
     def mover_ficha(self):
         ...
