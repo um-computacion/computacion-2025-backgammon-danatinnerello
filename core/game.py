@@ -13,6 +13,7 @@ from player import Jugador
 class Juego:
     def __init__(self,jugador1,jugador2,):
         self.__tablero__ = Tablero()
+        self.__jugadores__= [Jugador(jugador1,"blanco"),Jugador(jugador2,"negro")]
         self.__jugador1__ = jugador1
         self.__jugador2__ = jugador2
         self.__dados__ = Dados()
