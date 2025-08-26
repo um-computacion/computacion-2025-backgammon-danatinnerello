@@ -10,7 +10,7 @@ class Jugador:
     def __init__(self,nombre,color):
         self.__nombre__=nombre
         self.__color__=color
-        self.__fichas__=15
+        self.__fichas__= 15
 
     def obtener_nombre(self):
         return self.__nombre__
