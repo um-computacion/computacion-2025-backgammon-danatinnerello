@@ -13,9 +13,9 @@ from player import Jugador
 class Juego:
     def __init__(self,jugador1,jugador2,):
         self.__tablero__ = Tablero()
-        self.__jugadores__= [Jugador(jugador1,"blanco"),Jugador(jugador2,"negro")]
-        self.__jugador1__ = jugador1
-        self.__jugador2__ = jugador2
+        self.__jugadores__= [self.__jugador1__, self.__jugador2__]
+        self.__jugador1__ = Jugador(jugador1,"blanco")
+        self.__jugador2__ = Jugador(jugador2,"negro")
         self.__dados__ = Dados()
 
     def controlar_turnos(self):
