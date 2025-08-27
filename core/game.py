@@ -6,16 +6,16 @@
 -interactuar con el CLI o Pygame
 
 '''
-from board import Tablero
-from dice import Dados
-from player import Jugador
+from core.board import Tablero
+from core.dice import Dados
+from core.player import Jugador
 
 class Juego:
     def __init__(self,jugador1,jugador2,):
         self.__tablero__ = Tablero()
-        self.__jugadores__= [self.__jugador1__, self.__jugador2__]
         self.__jugador1__ = Jugador(jugador1,"blanco")
         self.__jugador2__ = Jugador(jugador2,"negro")
+        self.__jugadores__= [self.__jugador1__, self.__jugador2__]
         self.__dados__ = Dados()
 
     def controlar_turnos(self):
@@ -31,6 +31,5 @@ class Juego:
                 return jugador
         return None
 
-   
 
 
