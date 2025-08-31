@@ -13,16 +13,16 @@ class TestJugador(unittest.TestCase):
 
     def test_sacar_ficha(self):
         # al iniciar tiene 15 fichas restantes
-        self.assertTrue(self.jugador.sacar_ficha())
+        self.assertTrue(self.jugador.sacar_ficha_a_afuera())
         # después de sacar una, se testa que le queden 14
         self.assertEqual(self.jugador.__fichas_restantes__,14)
         
     def test_gano(self):
         # simulamos que saco todas las fichas
         for _ in range(15):
-            self.jugador.sacar_ficha()
+            self.jugador.sacar_ficha_a_afuera()
         self.assertTrue(self.jugador.gano())
 
     def test_sacar_ficha_sin_fichas(self):
         self.jugador.__fichas_restantes__ = 0
-        self.assertFalse(self.jugador.sacar_ficha())
+        self.assertFalse(self.jugador.sacar_ficha_a_afuera())
