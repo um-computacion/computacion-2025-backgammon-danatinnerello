@@ -16,7 +16,7 @@ y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
-## [1.0.0] - 2025-08-20
+## [1.0.0] - 2025-08-20 - Sprint 1
 ### Agregado
 - Creacion de la estructura del juego: carpetas y archivos de tablero y juego
 
@@ -40,6 +40,22 @@ y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 - Comienzo de desarrollo de este archivo changelog.md
 - En la clase jugador añadi un atributo que es `__fichas_restantes__`
 
+- Comienzo de desarollo de los promts de documentacion y desarollo
+
+- Cree el archico .coveragerc para que no me testee los archivos que no queria 
+- Creacion de los archivos __init__.py en la carpeta test y core
+-Testeo del codigo de las clases que habia desarrollado hasta el momento que eran: tablero, juego,jugadores y dados.
+
+- Sume la lista "barra" y el diccionario "afuera" en tablero
+- Añadi funciones como validar_movimiento, mostrar_barra , mostrar_afuera_ enviar_a_barra , entre otras en la clase tablero.
+- Desarrolle la clase ficha
+- En dados sume dos funciones:quedan_tiradas y reiniciar. Tambien añadi doctings
+- En juego añadi las funciones para mostrar los jugadores y doctings
+- En juego añadi funciones de mostrar_tablero, agregar o quitar de barra y para saber cuantas tiene en barra.
+
+- Agregue doctings en los test que ya tenia 
+- Agregue los test de los nuevos metodos o funciones que habia desarrollado y todavia no estaba testeado
+
 
 ### Cambiado
 - Cambie la menra de crear el contenedor que esta mal. De: `[0] * 24` a: `[[] for _ in range(24)]`  
@@ -55,12 +71,28 @@ y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 
 - Corregi el orden en la clase juego, ya que primero se deben crear los objetos jugadores y luego podran guardarse en el atributo jugadores. Yo tenia el orden invertido. 
 
+- En el test de jugador le cambie el nombre a un metodo por eso lo tuve que modificar.
+
 ### Eliminado
 - 
 
 ---
 
-## [0.1.0] - 2025-09-03
+## [0.1.0] - 2025-09-03 -  Sprint 2 
+### Agregado
+- Implementacion de integracion continua: pylint
+- Descarga de librerias requeridas
+
+### Cambiado 
+- Modifique en la clase dados un metodo 
+- Modifique tambien en la clase dados los test para testear los mismos ya que en una clase con el profesor gabriel nos enseño a testear por ejemplo el random, entonces desarrolle esos test segun habiamos visto con él.
+
+
+### Corregido
+
+
+
+### Emilinado
 
 
  
