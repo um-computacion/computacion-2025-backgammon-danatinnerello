@@ -1,16 +1,11 @@
 
 import unittest
 from core.dice import Dados
+from unittest.mock import patch
 
 class TestDados(unittest.TestCase):
     def setUp(self):
         self.dados = Dados()
-
-    def test_tirar_dados_devuelve_tupla(self):
-        #testea que tirar_dados devuelve una tupla de dos enteros entre 1 y 6
-        d1, d2 = self.dados.tirar_dados()
-        self.assertIn(d1,range(1,6))
-        self.assertIn(d2,range(1,6))
 
     def test_obtener_tiradas_restantes(self):
         #testea que despues de tirar se devuelve una lista con 2 o 4 elementos
@@ -30,11 +25,24 @@ class TestDados(unittest.TestCase):
         result = self.dados.usar_tirada(6)
         self.assertFalse(result)
 
-    def test_tirar_dados_dobles(self):
-        #testea que si salen dados dobles, se agregan 4 tiradas iguales
-        self.dados.__dado1__=6
-        self.dados.__dado2__=6
-        self.dados.__tiradas_restantes__=[6,6,6,6]
-        self.assertEqual(len(self.dados.__tiradas_restantes__),4)
+    @patch('random.randint', side_effect=[5, 2])
+    def test_simple(self, randint_patched):
+        dice = self.dados.tirar_dados()
+        self.assertEqual(len(dice), 2)
+        self.assertEqual(dice[0], 5)
+        self.assertEqual(dice[1], 2)
+        self.assertTrue(randint_patched.called)
+        self.assertEqual(randint_patched.call_count, 2)
+
+    @patch('random.randint', return_value=1)
+    def test_complex(self, randint_patched):
+        dice = self.dados.tirar_dados()
+        self.assertEqual(len(dice), 4)
+        self.assertEqual(dice[0], 1)
+        self.assertEqual(dice[1], 1)
+        self.assertEqual(dice[2], 1)
+        self.assertEqual(dice[3], 1)
+        self.assertTrue(randint_patched.called)
+        self.assertEqual(randint_patched.call_count, 2)
 
     

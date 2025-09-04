@@ -19,10 +19,10 @@ class Dados:
         self.__dado1__ = random.randint(1, 6) #numero aleatorio del uno al seis
         self.__dado2__ = random.randint(1, 6) # lo mismo
         if self.__dado1__ == self.__dado2__:
-            self.__tiradas_restantes__ = [self.__dado1__] * 4   #duplicamos si los dados son iguales
+            self.__tiradas_restantes__ = [self.__dado1__,self.__dado1__,self.__dado1__,self.__dado1__]   #duplicamos si los dados son iguales
         else:
             self.__tiradas_restantes__ = [self.__dado1__, self.__dado2__] #sino solo guarda los valores
-        return self.__dado1__, self.__dado2__
+        return self.__tiradas_restantes__
 
     def obtener_tiradas_restantes(self):
         return self.__tiradas_restantes__
