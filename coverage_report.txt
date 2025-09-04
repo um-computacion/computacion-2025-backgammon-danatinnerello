@@ -1,0 +1,10 @@
+Name               Stmts   Miss  Cover   Missing
+------------------------------------------------
+core/__init__.py       0      0   100%
+core/board.py         52      2    96%   55, 68
+core/checker.py       14      0   100%
+core/dice.py          24      2    92%   37, 40
+core/game.py          28      0   100%
+core/player.py        28      1    96%   18
+------------------------------------------------
+TOTAL                146      5    97%
