@@ -26,7 +26,9 @@ class Tablero:
 
 
     def mostrar_contenedor(self):
-        return self.__contenedor__
+        for i in range(24):
+            fichas = " , ".join(self.__contenedor__[i]) if self.__contenedor__[i] else "." 
+            print(f"{i:2}: {fichas}")
     
     def mostrar_barra(self):
         return self.__barra__

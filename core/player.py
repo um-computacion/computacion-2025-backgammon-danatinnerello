@@ -8,11 +8,13 @@
 
 class Jugador:
     def __init__(self,nombre,color):
-        self.__nombre__=nombre
+        self.__nombre__= nombre
         self.__color__=color
         self.__fichas__= 15
         self.__fichas_restantes__= 15
 
+    def __str__(self):
+        return f" {self.__nombre__} "
     
     def mostrar_fichas_restantes(self):
         return self.__fichas_restantes__
