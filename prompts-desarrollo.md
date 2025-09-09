@@ -127,9 +127,111 @@ Cuando todas tus fichas están en tu tablero interno (últimos 6 puntos), puedes
 
 - Referencia en archivos finales: Usada para desarrollar el juego
 
+### Prompt 3
 
+- Modelo / herramienta usada: ChatGPT GPT-5 (Agosto 2025)
 
+- Instrucciones del sistema: (Ninguna especial, salvo configuración por defecto de ChatGPT)
 
+- Prompt exacto usado: sumado a mis codigos: "en mi proyecto que tengo que desarrollar el juego de backgamon hasta el momento tengo eso. me podrias deci que metodos me faltarian desarrollar en esos archivos que te mande para que funcione el juego   "
+- Respuesta completa de la IA: 
+Perfecto, ya revisé los archivos que subiste (board.py, dice.py, game.py, player.py, checker.py). Te resumo lo que ya tenés y lo que falta desarrollar para que el juego de Backgammon pueda funcionar:
+
+📌 1. board.py (Tablero)
+Ya tenés:
+Inicialización de posiciones estándar.
+Movimiento básico de fichas (mover_ficha).
+Faltan métodos importantes:
+Validar movimientos según las reglas (ej. no se puede mover a un punto ocupado por 2+ fichas del rival).
+Manejar la barra (cuando una ficha es capturada, debe ir a la barra y salir primero antes de mover otras).
+Manejar el borneado (sacar fichas) cuando todas las fichas están en la zona final.
+Mostrar tablero de forma legible (útil si vas a usar CLI).
+
+📌 2. dice.py (Dados)
+Ya tenés:
+Tirar dados.
+Control de dobles.
+Uso de tiradas.
+Faltan:
+Validar si aún quedan movimientos posibles en el turno.
+Quizás un método reiniciar_tiradas() al empezar un turno.
+
+📌 3. game.py (Juego)
+Ya tenés:
+Inicialización de tablero, jugadores y dados.
+Control de turnos.
+Verificación de ganador.
+Faltan:
+Manejo de la barra (si un jugador tiene fichas en la barra, debe moverlas primero).
+Método para sacar fichas (cuando ya están en la zona de borneado).
+Método de interacción con el usuario (por CLI o Pygame).
+Inicialización del primer turno (en tu código __turno__ nunca se define al comienzo).
+
+📌 4. player.py (Jugador)
+Ya tenés:
+Nombre, color y cantidad de fichas.
+Método gano().
+Método sacar_ficha().
+Faltan:
+Método para agregar ficha a la barra.
+Método para devolver ficha desde la barra al tablero.
+Quizás contar fichas en juego para facilitar validaciones.
+
+📌 5. checker.py (Ficha)
+Ahora mismo está vacío con solo comentarios.
+Debería incluir:
+Atributos: color, posición (índice en tablero o "barra"/"borneado").
+Método para validar si puede moverse con un dado.
+Estado: si está en barra o borneada.
+
+✅ Con eso ya podrías tener un ciclo de juego más o menos completo:
+Inicia juego, elige primer jugador.
+Jugador tira los dados.
+Si tiene fichas en barra, debe moverlas primero.
+Mueve fichas en función de los dados (validando movimientos).
+Si mete todas sus fichas fuera → gana.
+Cambia de turno.
+
+- Uso de la salida: Usada 
+ 
+
+- Referencia en archivos finales: estructura de la clases
+
+### Prompt 4
+
+- Modelo / herramienta usada: ChatGPT GPT-5 (Agosto 2025)
+
+- Instrucciones del sistema: (Ninguna especial, salvo configuración por defecto de ChatGPT)
+
+- Prompt exacto usado: " mira estoy desarrollando el juego de backgammon y tengo que empezar a desarrollar el cli pero de a poco me ayudarias diciendome la logica de como empezar a desarrollarlo?  "
+- Respuesta completa de la IA: 
+¡Perfecto! Ya tenés la base de las clases para el juego de Backgammon (tablero, jugadores, fichas, dados y lógica general).
+Ahora, para empezar a armar el CLI (Command Line Interface), lo ideal es pensarlo como una capa de interacción: el CLI no debería tener la lógica del juego, sino usar las clases que ya creaste.
+
+🚀 Cómo empezar el CLI
+
+Menú inicial
+Pedir nombres de jugadores.
+Crear la instancia del Juego.
+Loop principal de la partida
+Mostrar de quién es el turno.
+Tirar los dados (juego.__dados__.tirar_dados()).
+Mostrar los resultados de los dados.
+Mientras queden tiradas:
+Preguntar al jugador qué movimiento quiere hacer.
+Validar con tablero.validar_movimiento(...).
+Si es válido, mover con tablero.mover_ficha(...).
+Actualizar tiradas con dados.usar_tirada(valor).
+Cambio de turno
+Llamar a juego.controlar_turnos().
+Verificar ganador
+Usar juego.verificar_ganador().
+Finalizar
+Si hay ganador, mostrar el mensaje y terminar.
+
+- Uso de la salida: Usada .
+
+- Referencia en archivos finales: estructura del cli
 
 
 

@@ -87,6 +87,10 @@ y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 - Modifique en la clase dados un metodo 
 - Modifique tambien en la clase dados los test para testear los mismos ya que en una clase con el profesor gabriel nos enseño a testear por ejemplo el random, entonces desarrolle esos test segun habiamos visto con él.
 
+- Actualizacion de los prompts
+- Creacion deel archivo cli.py
+- Comentario de lo que me imagino que voy a tener que desarrollar
+
 
 ### Corregido
 
