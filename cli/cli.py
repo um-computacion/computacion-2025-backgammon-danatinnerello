@@ -27,20 +27,48 @@ def main():
     while True:
         print("Tablero")
         print(juego.__tablero__.mostrar_contenedor())
+        print("Barra:", juego.mostrar_tablero().mostrar_barra())
+        print("Fichas afuera:", juego.mostrar_tablero().mostrar_afuera())     
         try:
             # decir a quien le toca tirar
             print(f"Turno de:{juego.mostrar_turno()} ")
             # tirar dados
-            # cambiar posiicon de ficha
-            # validar esa posicion
-            # guardar ficha en la nueva posicion 
-            # verificar si hay ganador
-            # cambiar turno
-            # verificar si hay fichas en barra
+            tirada = dados.tirar_dados()
+            print(f"Tirada: {tirada}")
+            # cambiar posiicon de ficha : bucle de movimiento para el turno
+            while dados.quedan_tiradas():
+                jugador_actual = juego.mostrar_turno()
+                print(f"Tiradas restantes: {dados.obtener_tiradas_restantes()}")
+            #mover desde la barra
+            #comprueba si la lista de fichas de la barra del jugador actual no esta vacia
+                if juego.mostrar_tablero().mostrar_barra()[jugador_actual.obtener_color()]:
+                    print("Tienes fichas en la barra.Debes mover una de ellas primero")
+                    try:
+                        dado_a_usar = int(input("Ingresa el valor del dado para mover desde la barra: "))
+                        if dados.usar_tirada(dado_a_usar):
+                            if jugador_actual.obtener_color()=="negras":
+                                hacia=24 - dado_a_usar
+                            else:
+                                hacia=dado_a_usar - 1
+                        
+                            if juego.mostrar_tablero().mover_desde_barra(jugador_actual.obtener_color(), hacia):
+                                print(f"Ficha movida de la barra a la posición {hacia}")
+                            else:
+                                print("MOvimiento invalido desde la barra")
+                                dados.obtener_tiradas_restantes().append(dado_a_usar)
+                        else:
+                            print("Dado no disponible.Intentalo de nuevo")
+                    except ValueError:
+                        print("Entrada invalida.Porfavor, ingresa un numero")
+                    break #despues cambiar
+               
 
-            break
+      
         except Exception as e:
             print(e)
+
+            break 
+
 
 
 if __name__ == "__main__":
