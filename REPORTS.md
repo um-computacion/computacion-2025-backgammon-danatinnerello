@@ -3,14 +3,15 @@
 ```text
 Name               Stmts   Miss  Cover   Missing
 ------------------------------------------------
+cli/__init__.py        0      0   100%
 core/__init__.py       0      0   100%
-core/board.py         52      2    96%   55, 68
+core/board.py         55      2    96%   58, 71
 core/checker.py       14      0   100%
 core/dice.py          24      2    92%   37, 40
-core/game.py          28      0   100%
-core/player.py        28      1    96%   18
+core/game.py          32      2    94%   33, 42
+core/player.py        30      2    93%   17, 20
 ------------------------------------------------
-TOTAL                146      5    97%
+TOTAL                155      8    95%
 
 ```
 ## Pylint Report
