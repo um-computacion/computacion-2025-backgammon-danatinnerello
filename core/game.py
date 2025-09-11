@@ -13,8 +13,8 @@ from core.player import Jugador
 class Juego:
     def __init__(self,jugador1,jugador2):
         self.__tablero__ = Tablero()
-        self.__jugador1__ = Jugador(jugador1,"blanco")
-        self.__jugador2__ = Jugador(jugador2,"negro")
+        self.__jugador1__ = Jugador(jugador1,"Blanca")
+        self.__jugador2__ = Jugador(jugador2,"Negra")
         self.__jugadores__= [self.__jugador1__, self.__jugador2__]
         self.__dados__ = Dados()
         self.__turno__ = self.__jugador1__
