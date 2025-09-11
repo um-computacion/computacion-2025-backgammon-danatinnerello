@@ -83,4 +83,23 @@ class Tablero:
             return True
         return False
   
-    
+    def todas_en_ultimo_cuadrante(self,color): # verifica que esten en el ultimmo cuadrante para poder empezar a sacarlas
+        if color=="Blanca":
+            rango = range(0,6) #casa de las blancas
+        else: #ssi color es igual a negras
+            rango = range(18,24) #casa de las negras
+
+        for i, punto in enumerate(self.__contenedor__): #recorre las posiciones del contenedor
+            for ficha in punto: #recorre las fichas en cada punto
+                if ficha == color and i not in rango: #si la ficha es del color y no esta en el rango
+                    return False # entonces no todas estan en el ultimo cuadrante
+        return True #si recorre todo y no encontro ninguna fuera del rango, todas estan en el ultimo cuadrante
+
+    def mostrar_estado(self):
+      #devuelve una representacion en texto del trablero
+        estado = []
+        estado.append(f"Contenedor: {self.__contenedor__}")
+        estado.append(f"Barra: {self.__barra__}")
+        estado.append(f"Fichas afuera: {self.__afuera__}")
+        return "\n".join(estado)
+
