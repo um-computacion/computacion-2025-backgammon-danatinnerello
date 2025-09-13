@@ -66,29 +66,42 @@ def main():
                         if contenedor[desde][-1] != jugador_actual.obtener_color():
                             raise ValueError("esa ficha no te pertenece")
                         # ejecutar movimiento
-                        if hacia == -1:
+                        if hacia== -1:
                             # Sacar ficha 
                             if juego.mostrar_tablero().todas_en_ultimo_cuadrante(jugador_actual.obtener_color()):
-                                dado_a_usar = (desde + 1) if jugador_actual.obtener_color() == "Blanca" else(24-desde)
+                                dado_a_usar= (desde + 1) if jugador_actual.obtener_color() == "Blanca" else(24-desde)
                                 if dados.usar_tirada(dado_a_usar) and juego.mostrar_tablero().sacar_ficha(jugador_actual.obtener_color(), desde):
                                     jugador_actual.sacar_ficha_a_afuera()
                                     print(f"ficha sacada desde {desde}")
                                 else:
                                     print("No puedes sacar una ficha desde esa posicion con el dado actual")
                             else:
-                                print("no puedes sacar fichas. No todas estan en el último cuadrante.")
-                      #movimineto normal
+                                print("no puedes sacar fichas. No todas estan en el ultimo cuadrante.")
+                        else:
+                            # Movimiento normal
+                            dado_a_usar=abs(hacia - desde)
+                            if (dados.usar_tirada(dado_a_usar) and juego.mostrar_tablero().validar_movimiento(jugador_actual.obtener_color(),hacia)):
+                                juego.mostrar_tablero().mover_ficha(jugador_actual.obtener_color(),desde,hacia)
+                                print(f"ficha movida de {desde} a {hacia}")
+                            else:
+                                print("movimiento invalido")
 
                 except ValueError as e:
-                    print("Error:", e)
+                    print("Error:",e)
 
         except ValueError as e:
-            print("Error:", e)
+            print("Error:",e)
 
-        break
+        print(juego.mostrar_tablero().mostrar_estado())
 
         # verificar ganador
-        # cambio de turno
+        ganador=juego.verificar_ganador()
+        if ganador:
+            print(f"ganoo {ganador.obtener_nombre()}.Color {ganador.obtener_color()} ")
+            break
+
+        juego.controlar_turnos()  # cambio de turno
+      
 
 
 if __name__ == "__main__":
