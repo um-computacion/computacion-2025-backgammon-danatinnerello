@@ -233,11 +233,117 @@ Si hay ganador, mostrar el mensaje y terminar.
 
 - Referencia en archivos finales: estructura del cli
 
+### Prompt 5
 
+- Modelo / herramienta usada: ChatGPT GPT-5 (Agosto 2025)
 
+- Instrucciones del sistema: (Ninguna especial, salvo configuración por defecto de ChatGPT)
 
+- Prompt exacto usado: " necesito añadir una condiion porque no se puede sacar fichas del tablero si no estan las 15 en el ultimo cuadrante "
+- Respuesta completa de la IA: 
+¡Exacto! 🔥 Esa es una de las reglas centrales del backgammon: sólo podés empezar a sacar fichas cuando las 15 fichas de tu color están dentro de tu “home board” (último cuadrante).
 
+📌 Cómo implementarlo con tu código
 
+Definimos qué es el último cuadrante:
+
+Para Blancas → posiciones 0 a 5 (lado de salida de Blancas).
+
+Para Negras → posiciones 18 a 23.
+
+Creamos un método auxiliar en Tablero que verifique si todas las fichas de un color están en su cuadrante de salida.
+
+🔧 En board.py:
+    def todas_en_cuadrante(self, color):
+        if color == "Blanca":
+            rango = range(0, 6)   # home de blancas
+        else:  # color == "Negra"
+            rango = range(18, 24) # home de negras
+
+        for i, punto in enumerate(self.__contenedor__):
+            for ficha in punto:
+                if ficha == color and i not in rango:
+                    return False
+        return True
+En tu cli.py (dentro de la parte de sacar ficha):
+if hacia == -1:
+    if juego.mostrar_tablero().todas_en_cuadrante(jugador_actual.obtener_color()):
+        if juego.mostrar_tablero().sacar_ficha(jugador_actual.obtener_color(), desde):
+            if dados.usar_tirada(dado_a_usar):
+                jugador_actual.sacar_ficha_a_afuera()
+                print(f"Ficha sacada desde {desde}")
+            else:
+                print("Ese valor de dado no está disponible.")
+        else:
+            print("No puedes sacar ficha desde esa posición.")
+    else:
+        print("❌ No puedes sacar fichas todavía, no todas están en el último cuadrante.")
+📝 Resumen de la lógica
+
+Antes de intentar sacar (hacia == -1), verificamos con todas_en_cuadrante(color).
+
+Si no se cumple, mostramos mensaje y no dejamos sacar.
+
+Si se cumple, seguimos con la lógica normal (sacar_ficha, usar_tirada, restar ficha al jugador).
+
+- Uso de la salida: Usada con modificaciones
+
+- Referencia en archivos finales: cli/clli.py, core/board.py
+
+### Prompt 6
+
+- Modelo / herramienta usada: ChatGPT GPT-5 (Agosto 2025)
+
+- Instrucciones del sistema: (Ninguna especial, salvo configuración por defecto de ChatGPT)
+
+- Prompt exacto usado: " me imprime el tablero dos veces, porque puede ser?  "
+- Respuesta completa de la IA: 
+Eso pasa porque en tu cli.py lo estás imprimiendo dos veces por ciclo de turno 👀.
+
+Mirá este fragmento de tu código:
+while True:
+    print("Tablero")
+    print(juego.__tablero__.mostrar_contenedor())
+    print("Barra:", juego.mostrar_tablero().mostrar_barra())
+    print("Fichas afuera:", juego.mostrar_tablero().mostrar_afuera())     
+    try:
+        # decir a quien le toca tirar
+        print(f"Turno de:{juego.mostrar_turno()} ")
+        # tirar dados
+        tirada = dados.tirar_dados()
+        print(f"Tirada: {tirada}")
+        # cambiar posiicon de ficha : bucle de movimiento para el turno
+        while dados.quedan_tiradas():
+            jugador_actual = juego.mostrar_turno()
+            print(f"Tiradas restantes: {dados.obtener_tiradas_restantes()}")
+            ...
+🔎 Posibles causas
+
+Lo imprimís al inicio del turno (print("Tablero")...) y también probablemente lo estés imprimiendo dentro del while dados.quedan_tiradas() cuando probás movimientos.
+
+Puede que mostrar_tablero() en Juego esté también llamando internamente a otro print en vez de return (tendría que revisar tu clase Juego para confirmarlo).
+
+✅ Soluciones fáciles
+
+Opción 1: Mostrá el tablero solo una vez por turno (antes de que el jugador empiece a mover).
+Es decir, mové estas líneas adentro del while dados.quedan_tiradas() si querés que se refresque solo cuando se use un dado:
+print("Tablero")
+print(juego.__tablero__.mostrar_contenedor())
+print("Barra:", juego.mostrar_tablero().mostrar_barra())
+print("Fichas afuera:", juego.mostrar_tablero().mostrar_afuera()) 
+Opción 2: Creá una función mostrar_estado(juego) y llamala una sola vez donde quieras refrescar:
+def mostrar_estado(juego):
+    print("Tablero:", juego.__tablero__.mostrar_contenedor())
+    print("Barra:", juego.mostrar_tablero().mostrar_barra())
+    print("Fichas afuera:", juego.mostrar_tablero().mostrar_afuera())
+Y en tu loop:
+while True:
+    mostrar_estado(juego)  # en vez de repetir prints
+    ...
+Opción 3: Revisá que en mostrar_tablero() de Juego no tengas un print escondido, debería retornar el tablero, no imprimirlo directamente.
+- Uso de la salida: Usada con modificaciones opcion 2 
+
+- Referencia en archivos finales: core/game.py, core/board.py
 
 
 

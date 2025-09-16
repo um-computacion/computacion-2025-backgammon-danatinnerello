@@ -83,6 +83,21 @@ y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 - Implementacion de integracion continua: pylint
 - Descarga de librerias requeridas
 
+- Desarrollo de la base del cli, iniciacion de objetos, sin funcionalidades
+- Agregue en game metodos para mostrar turnos y contenedor
+- Agregue en player el metodo str
+
+- Desarrollo en el cli para validar movimientos a barra 
+
+- Desarrollo en el cli, de moviiento hacia afuera y movimiento normal entre posiciones 
+- DEsarrollo en el cli de verificar ganador y cambio de turno
+
+- Comienzo de desarrollo de test del cli
+
+- Desarrollo de test extras para el cli, para cubrir el porcentaje pedido
+
+- Actualizacion de prompts y changelog
+
 ### Cambiado 
 - Modifique en la clase dados un metodo 
 - Modifique tambien en la clase dados los test para testear los mismos ya que en una clase con el profesor gabriel nos enseño a testear por ejemplo el random, entonces desarrolle esos test segun habiamos visto con él.
@@ -90,6 +105,11 @@ y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 - Actualizacion de los prompts
 - Creacion deel archivo cli.py
 - Comentario de lo que me imagino que voy a tener que desarrollar
+
+- MOdifique en la clase bord el metodo de mostrar_contenedor
+
+- Modificacion en board, en el metodo mostrar_contenedor: return
+
 
 
 ### Corregido

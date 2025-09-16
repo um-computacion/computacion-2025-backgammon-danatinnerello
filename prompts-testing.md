@@ -95,3 +95,144 @@ Te paso tests adicionales para test_game.py con docstrings y sin repetir lo que 
 
 - Uso de la salida: Usada 
 - Referencia en archivos finales: test/test_game.py
+
+### Prompt 3
+
+- Modelo / herramienta usada: ChatGPT GPT-5 (Agosto 2025)
+
+- Instrucciones del sistema: (Ninguna especial, salvo configuración por defecto de ChatGPT)
+
+- Prompt exacto usado: " Hola, buenas. Mira, necesito que me ayudes. Me sale ese error. Quiero hacer un pull. Porque en git, tengo en el archivo tsli, tengo muchísimos tests, que en github me salen, pero acá no. Y tengo miedo que si hago un commit, me quede el archivo sin nada, en vez de con todo. ¿Cómo puedo hacer para que esté igual lo que tengo en git a lo que tengo acá en visual? "
+- Respuesta completa de la IA: 
+¡Perfecto, veo lo que pasó! 👀
+
+El error que te aparece dice:
+error: Los siguientes archivos locales serán sobrescritos al fusionar:
+    core/__pycache__/board.cpython-311.pyc
+    ...
+Por favor, comitea tus cambios o guárdalos en el stash antes de fusionar.
+Eso significa que Git no te deja hacer git pull porque tenés cambios locales (o archivos generados como los .pyc) que entrarían en conflicto con lo que hay en GitHub.
+
+Vos querés asegurarte de que tu repo local quede exactamente igual a lo que está en GitHub (o sea, “tirar lo local y dejar lo remoto”).
+
+👉 Tenés varias formas de hacerlo, según lo que quieras:
+🚨 Opción 1: Descartar todos tus cambios locales y dejar tu repo igual al remoto
+
+Si no te importa perder lo que tenés localmente:
+git fetch --all
+git reset --hard origin/main
+Eso va a dejar tu repo local idéntico al de GitHub (se borran cambios locales).
+⚡ Opción 2: Guardar lo que tenés localmente por las dudas
+
+Si no querés perder nada, podés usar stash antes de hacer el pull:
+git stash
+git pull
+Después, si querés recuperar tus cambios locales:
+git stash pop
+🚫 Nota importante
+
+Los archivos que te marca (por ejemplo los __pycache__) son archivos generados automáticamente por Python, no deberían estar versionados en Git. Para evitar ese problema, se suele usar un archivo .gitignore con algo así:
+__pycache__/
+*.pyc
+
+- Uso de la salida: Usada 
+
+- Referencia en archivos finales: 
+
+### Prompt 4
+
+- Modelo / herramienta usada: ChatGPT GPT-5 (Agosto 2025)
+
+- Instrucciones del sistema: (Ninguna especial, salvo configuración por defecto de ChatGPT)
+
+- Prompt exacto usado: " tengo un porcentaje de 67 porciento cubierto me ayudas a hacer mas test del cli para aumentar ese porcentaje. hacelos con unittest, basandote en mi codigo, sin repetir test anteriores y sin errores por favor "
+
+- Respuesta completa de la IA: 
+¡Perfecto 🚀! Ya tenés una buena base de cobertura (~67%). Para subir ese porcentaje hay que cubrir ramas del código que todavía no tocamos en tu cli.py.
+
+Repasando tu main() hay varias situaciones que faltan:
+
+Movimiento inválido desde la barra (mover_desde_barra devuelve False).
+
+Movimiento válido desde la barra (ficha pasa de la barra al tablero).
+
+Sacar ficha válido (cuando todas están en el último cuadrante).
+
+No se puede sacar ficha porque no hay dado adecuado.
+
+Error en la tirada → si se ingresa un valor no numérico al pedir posiciones/dados.
+
+📂 test/test_cli_extra.py
+import unittest
+from unittest.mock import patch
+import cli.cli as cli
+
+
+class TestCLIExtra(unittest.TestCase):
+
+    def run_cli_with_inputs(self, inputs):
+        """Ejecuta cli.main con entradas simuladas y devuelve los prints."""
+        with patch("builtins.input", side_effect=inputs + [EOFError]), \
+             patch("builtins.print") as mock_print:
+            try:
+                cli.main()
+            except (EOFError, SystemExit):
+                pass
+        return [" ".join(map(str, args)) for args, _ in mock_print.call_args_list]
+
+    def test_movimiento_desde_barra_invalido(self):
+        # Forzamos que la barra tenga fichas pero el movimiento sea inválido
+        with patch("core.board.Tablero.mostrar_barra", return_value={"Blanca": ["ficha"], "Negra": []}), \
+             patch("core.board.Tablero.mover_desde_barra", return_value=False):
+            salida = self.run_cli_with_inputs(["Ana", "Beto", "3"])
+        self.assertTrue(any("movimiento invalido desde la barra" in line for line in salida))
+
+    def test_movimiento_desde_barra_valido(self):
+        # Ficha en barra y movimiento exitoso
+        with patch("core.board.Tablero.mostrar_barra", return_value={"Blanca": ["ficha"], "Negra": []}), \
+             patch("core.board.Tablero.mover_desde_barra", return_value=True), \
+             patch("core.dice.Dados.usar_tirada", return_value=True):
+            salida = self.run_cli_with_inputs(["Ana", "Beto", "3"])
+        self.assertTrue(any("ficha movida de la barra a la posiciion" in line for line in salida))
+
+    def test_sacar_ficha_valido(self):
+        # Todas en el último cuadrante y dado correcto
+        with patch("core.board.Tablero.todas_en_ultimo_cuadrante", return_value=True), \
+             patch("core.board.Tablero.sacar_ficha", return_value=True), \
+             patch("core.dice.Dados.usar_tirada", return_value=True):
+            salida = self.run_cli_with_inputs(["Ana", "Beto", "23", "-1"])
+        self.assertTrue(any("ficha sacada desde" in line for line in salida))
+
+    def test_sacar_ficha_no_puedes_por_dado(self):
+        # Todas en el último cuadrante pero no hay dado válido
+        with patch("core.board.Tablero.todas_en_ultimo_cuadrante", return_value=True), \
+             patch("core.board.Tablero.sacar_ficha", return_value=False), \
+             patch("core.dice.Dados.usar_tirada", return_value=False):
+            salida = self.run_cli_with_inputs(["Ana", "Beto", "23", "-1"])
+        self.assertTrue(any("No puedes sacar una ficha desde esa posicion" in line for line in salida))
+
+    def test_input_invalido_en_movimiento(self):
+        # Forzar que se ingrese algo no numérico
+        salida = self.run_cli_with_inputs(["Ana", "Beto", "abc"])
+        self.assertTrue(any("Error:" in line for line in salida))
+
+
+if __name__ == "__main__":
+    unittest.main()
+✅ Qué cubren estos tests nuevos
+
+Movimiento desde la barra inválido (línea print("movimiento invalido desde la barra")).
+
+Movimiento desde la barra válido (línea print("ficha movida de la barra...")).
+
+Sacar ficha correctamente (línea print("ficha sacada desde...")).
+
+No poder sacar ficha por falta de dado (línea "No puedes sacar...").
+
+Error al ingresar un valor no numérico (captura el ValueError y su print("Error: ...")).
+
+⚡ Con estos tests deberías cubrir casi todos los caminos del CLI y subir bastante tu cobertura.
+
+- Uso de la salida: Usada
+
+- Referencia en archivos finales: test/test_cli.py
