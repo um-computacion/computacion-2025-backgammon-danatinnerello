@@ -15,7 +15,13 @@ verificar posiciones
 verificar ganador 
 
 '''
-def main():
+def main(interactive: bool = False):
+    """
+    interactive: bool
+        - False(default):se ejecuta en modo pruebas compatible con los tests automatizados
+        - True:habilita un menu de control con opciones para rendirse o salir
+          del juego,pensado para uso interactivo en la terminal
+    """
     print("Bienvenidos al juego Backgammon")
     print("Inicio del juego")
     nombre1 = input("Ingrese el nombre del jugador 1 (fichas Blanca): ")
@@ -28,6 +34,28 @@ def main():
         print("Tablero")
         print(juego.mostrar_tablero().mostrar_estado())    
         try:
+            # opciones de control
+            # menú solo si interactive=True
+            if interactive:
+                '''
+                Si interactive=True, se muestra un menu de control al inicio de cada turno
+                Si la opcion es invalida, se vuelve a pedir'''
+                print("Opciones: ")
+                print("1- Jugar turno")
+                print("2- Rendirse")
+                print("3- Salir del juego")
+                opcion= input("Seleccione una opcion: ")
+                if opcion== "2":
+                    print(f"{juego.mostrar_turno().obtener_nombre()} se ha rendido")
+                    break
+                elif opcion== "3":
+                    print("Juego finalizado por el usuario")
+                    break
+                elif opcion!= "1":
+                    print("Opcion invalida")
+                    continue
+
+            # inicio del turno
             # decir a quien le toca tirar
             print(f"Turno de:{juego.mostrar_turno()} ")
             # tirar dados
@@ -105,4 +133,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    #ejecutar en modo interactivo cuando se corre como script
+    main(interactive = True)
