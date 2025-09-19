@@ -5,13 +5,12 @@ from core.player import Jugador
 
 
 class TestCLI(unittest.TestCase):
-
-    def run_cli_with_inputs(self, inputs):
+    def run_cli_with_inputs(self, inputs,  interactive=False):
         # ejecuta el main con entradas simuladas
         with patch("builtins.input", side_effect=inputs + [EOFError]), \
              patch("builtins.print") as mock_print:
             try:
-                cli.main()
+                cli.main(interactive=interactive)
             except (EOFError, SystemExit): 
                 #al final lanza EOFError para cortar el bucle infinito
                 pass
@@ -81,8 +80,21 @@ class TestCLI(unittest.TestCase):
 
     def test_input_invalido_en_movimiento(self):
         # Forzar que se ingrese algo no numérico
-        salida = self.run_cli_with_inputs(["Ana", "Beto", "abc"])
+        salida = self.run_cli_with_inputs(["dana", "caro", "abc"])
         self.assertTrue(any("Error:" in line for line in salida))
+
+    def test_opcion_rendirse(self):
+        salida = self.run_cli_with_inputs(["dana","caro","2"], interactive=True)
+        self.assertTrue(any("se ha rendido" in line for line in salida))
+
+    def test_opcion_salir(self):
+        salida = self.run_cli_with_inputs(["dana","caro","3"], interactive=True)
+        self.assertTrue(any("Juego finalizado por el usuario" in line for line in salida))
+
+    def test_opcion_invalida(self):
+        salida = self.run_cli_with_inputs(["dana","caro","99","1"], interactive=True)
+        self.assertTrue(any("Opcion invalida" in line for line in salida))
+
 
 
 if __name__ == "__main__":
