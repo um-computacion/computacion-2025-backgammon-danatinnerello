@@ -60,7 +60,10 @@ def main(interactive: bool = False):
             print(f"Turno de:{juego.mostrar_turno()} ")
             # tirar dados
             tirada = dados.tirar_dados()
-            print(f"Tirada: {tirada}")
+            if len(tirada)== 4:
+                print(f"Tirada doble: {tirada}")
+            else:
+                print(f"Tirada: {tirada}")
             # cambiar posiicon de ficha : bucle de movimiento para el turno
             while dados.quedan_tiradas():
                 jugador_actual = juego.mostrar_turno()
@@ -75,22 +78,22 @@ def main(interactive: bool = False):
                         else:# Negra
                             hacia=dado_a_usar-1
                         if dados.usar_tirada(dado_a_usar) and juego.mostrar_tablero().mover_desde_barra(jugador_actual.obtener_color(), hacia):
-                            print(f"ficha movida de la barra a la posiciion {hacia}")
+                            print(f"ficha movida de la barra a la posiciion {hacia+1}")
                         else:
                             print("movimiento invalido desde la barra")
                             continue
                     #movimiento normal y para sacarlas a afuera
                     else:
-                        desde=int(input("mover desde posicion(0-23): "))
-                        hacia = int(input("mover hacia posicion(0-23 o -1 para sacar): "))
+                        desde=int(input("mover desde posicion(1 - 24): ")) -1
+                        hacia = int(input("mover hacia posicion(1-24 o 0 para sacar): "))
                         # validaciones
                         if desde< 0 or desde> 23:
-                            raise ValueError("La posicion 'desde' debe estar entre 0 y 23")
+                            raise ValueError("La posicion 'desde' debe estar entre 1 y 24")
                         if hacia!= -1 and (hacia< 0 or hacia> 23):
-                            raise ValueError("la posicion 'hacia' debe estar entre 0 y 23")
+                            raise ValueError("la posicion 'hacia' debe estar entre 1 y 24")
                         contenedor=juego.mostrar_tablero().mostrar_contenedor()
                         if not contenedor[desde]:
-                            raise ValueError(f"no hay fichas en la posicion {desde}")
+                            raise ValueError(f"no hay fichas en la posicion {desde+1}")
                         if contenedor[desde][-1] != jugador_actual.obtener_color():
                             raise ValueError("esa ficha no te pertenece")
                         # ejecutar movimiento
@@ -100,7 +103,7 @@ def main(interactive: bool = False):
                                 dado_a_usar= (desde + 1) if jugador_actual.obtener_color() == "Blanca" else(24-desde)
                                 if dados.usar_tirada(dado_a_usar) and juego.mostrar_tablero().sacar_ficha(jugador_actual.obtener_color(), desde):
                                     jugador_actual.sacar_ficha_a_afuera()
-                                    print(f"ficha sacada desde {desde}")
+                                    print(f"ficha sacada desde {desde+1}")
                                 else:
                                     print("No puedes sacar una ficha desde esa posicion con el dado actual")
                             else:
@@ -109,8 +112,10 @@ def main(interactive: bool = False):
                             # Movimiento normal
                             dado_a_usar=abs(hacia - desde)
                             if (dados.usar_tirada(dado_a_usar) and juego.mostrar_tablero().validar_movimiento(jugador_actual.obtener_color(),hacia)):
-                                juego.mostrar_tablero().mover_ficha(jugador_actual.obtener_color(),desde,hacia)
-                                print(f"ficha movida de {desde} a {hacia}")
+                                captura= juego.mostrar_tablero().mover_ficha(jugador_actual.obtener_color(),desde,hacia)
+                                if captura:
+                                    print(f"capturaste una ficha enemiga en la posicion {hacia+1}")
+                                print(f"ficha movida de {desde+1} a {hacia+1}")
                             else:
                                 print("movimiento invalido")
 
