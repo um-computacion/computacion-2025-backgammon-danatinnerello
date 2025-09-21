@@ -24,7 +24,7 @@ class TestCLI(unittest.TestCase):
 
     def test_movimiento_fuera_de_rango(self):
         salida= self.run_cli_with_inputs(["Dana", "abi", "25", "0"])
-        self.assertTrue(any("debe estar entre 0 y 23" in line for line in salida))
+        self.assertTrue(any("debe estar entre 1 y 24" in line for line in salida))
 
     def test_movimiento_sin_fichas(self):
         #posicion 2 arranca vacia
@@ -38,14 +38,14 @@ class TestCLI(unittest.TestCase):
 
     def test_sacar_ficha_no_permitido(self):
         #intenta sacar desde 12 (Blanca, pero no estan todas en el ultimo cuadrante)
-        salida= self.run_cli_with_inputs(["Dana", "abi", "12", "-1"])
+        salida= self.run_cli_with_inputs(["Dana", "abi", "13", "-1"])
         self.assertTrue(any("no puedes sacar fichas" in line for line in salida))
 
     def test_movimiento_normal_valido(self):
         #mover dados de 23 a 22 (Blanca)
         with patch("random.randint", return_value=1):
-            salida= self.run_cli_with_inputs(["Dana", "abi", "23", "22"])
-        self.assertTrue(any("ficha movida de 23 a 22" in line for line in salida))
+            salida= self.run_cli_with_inputs(["Dana", "abi", "24", "23"])
+        self.assertTrue(any("ficha movida de 24 a 23" in line for line in salida))
     
     def test_movimiento_desde_barra_invalido(self):
         # Forzamos que la barra tenga fichas pero el movimiento sea inválido
@@ -67,7 +67,7 @@ class TestCLI(unittest.TestCase):
         with patch("core.board.Tablero.todas_en_ultimo_cuadrante", return_value=True), \
              patch("core.board.Tablero.sacar_ficha", return_value=True), \
              patch("core.dice.Dados.usar_tirada", return_value=True):
-            salida = self.run_cli_with_inputs(["Ana", "Beto", "23", "-1"])
+            salida = self.run_cli_with_inputs(["Ana", "Beto", "24", "-1"])
         self.assertTrue(any("ficha sacada desde" in line for line in salida))
 
     def test_sacar_ficha_no_puedes_por_dado(self):
@@ -75,7 +75,7 @@ class TestCLI(unittest.TestCase):
         with patch("core.board.Tablero.todas_en_ultimo_cuadrante", return_value=True), \
              patch("core.board.Tablero.sacar_ficha", return_value=False), \
              patch("core.dice.Dados.usar_tirada", return_value=False):
-            salida = self.run_cli_with_inputs(["Ana", "Beto", "23", "-1"])
+            salida = self.run_cli_with_inputs(["Ana", "Beto", "24", "-1"])
         self.assertTrue(any("No puedes sacar una ficha desde esa posicion" in line for line in salida))
 
     def test_input_invalido_en_movimiento(self):
