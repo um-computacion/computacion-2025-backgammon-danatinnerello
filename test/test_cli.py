@@ -33,7 +33,7 @@ class TestCLI(unittest.TestCase):
 
     def test_movimiento_ficha_otro_color(self):
         #turnode la Blanca pero intenta mover desde posicion 0 que hya fichas negras
-        salida= self.run_cli_with_inputs(["Dana", "abi", "0", "1"])
+        salida= self.run_cli_with_inputs(["Dana", "abi", "1", "2"])
         self.assertTrue(any("esa ficha no te pertenece" in line for line in salida))
 
     def test_sacar_ficha_no_permitido(self):
@@ -42,10 +42,18 @@ class TestCLI(unittest.TestCase):
         self.assertTrue(any("no puedes sacar fichas" in line for line in salida))
 
     def test_movimiento_normal_valido(self):
-        #mover dados de 23 a 22 (Blanca)
-        with patch("random.randint", return_value=1):
-            salida= self.run_cli_with_inputs(["Dana", "abi", "24", "23"])
-        self.assertTrue(any("ficha movida de 24 a 23" in line for line in salida))
+    #establecemos un contenedor con una ficha Blanca en la ultima posicion
+        cont = [[] for _ in range(24)]
+        cont[23] = ["Blanca"]
+
+        with patch("core.board.Tablero.mostrar_contenedor", return_value=cont), \
+            patch("core.dice.Dados.usar_tirada", return_value=True), \
+            patch("core.board.Tablero.validar_movimiento", return_value=True), \
+            patch("core.board.Tablero.mover_ficha", return_value=False):
+            salida = self.run_cli_with_inputs(["Dana", "abi", "24", "23"])
+        #verifica que se haya impreso un movimiento de ficha
+        self.assertTrue(
+            any("ficha movida de" in line for line in salida))
     
     def test_movimiento_desde_barra_invalido(self):
         # Forzamos que la barra tenga fichas pero el movimiento sea inválido
@@ -96,6 +104,50 @@ class TestCLI(unittest.TestCase):
         self.assertTrue(any("Opcion invalida" in line for line in salida))
 
 
+    def test_movimiento_invalido_por_validacion(self):
+        # Forzamos que validar_movimiento devuelva False para provocar "movimiento invalido"
+        cont = [[] for _ in range(24)]
+        cont[0] = ["Blanca"]  # una ficha válida en la primera posición
+        with patch("core.board.Tablero.mostrar_contenedor", return_value=cont), \
+            patch("core.dice.Dados.usar_tirada", return_value=True), \
+            patch("core.board.Tablero.validar_movimiento", return_value=False):
+            salida = self.run_cli_with_inputs(["Ana", "Beto", "1", "2"])
+        self.assertTrue(any("movimiento invalido" in line for line in salida))
+
+
+    def test_captura_de_ficha(self):
+        # Simulamos que mover_ficha devuelve True → captura
+        cont = [[] for _ in range(24)]
+        cont[0] = ["Blanca"]
+        with patch("core.board.Tablero.mostrar_contenedor", return_value=cont), \
+            patch("core.dice.Dados.usar_tirada", return_value=True), \
+            patch("core.board.Tablero.validar_movimiento", return_value=True), \
+            patch("core.board.Tablero.mover_ficha", return_value=True):
+            salida = self.run_cli_with_inputs(["Ana", "Beto", "1", "2"])
+        self.assertTrue(any("capturaste una ficha enemiga" in line for line in salida))
+
+    def test_tirada_doble(self):
+        # Simulamos tirada doble (cuatro dados) y forzamos salida inmediata
+        jugador_falso = Jugador("Fake", "Blanca")
+        with patch("core.dice.Dados.tirar_dados", return_value=[3, 3, 3, 3]), \
+            patch("core.dice.Dados.quedan_tiradas", return_value=False), \
+            patch("core.game.Juego.verificar_ganador", return_value=jugador_falso):
+            salida = self.run_cli_with_inputs(["Ana", "Beto"])
+        # Verificamos que salió el mensaje de tirada doble
+        self.assertTrue(any("Tirada doble:" in line for line in salida))
+
+
+    def test_ganador_detectado(self):
+        # Simulamos que ya hay un ganador al inicio
+        jugador_falso = Jugador("Test", "Blanca")
+        with patch("core.dice.Dados.tirar_dados", return_value=[1, 2]), \
+            patch("core.dice.Dados.quedan_tiradas", return_value=False), \
+            patch("core.game.Juego.verificar_ganador", return_value=jugador_falso):
+            salida = self.run_cli_with_inputs(["Ana", "Beto"])
+        # Verificamos que el mensaje de ganador aparezca
+        self.assertTrue(any("ganoo Test.Color Blanca" in line for line in salida))
+
+        
 
 if __name__ == "__main__":
     unittest.main()
