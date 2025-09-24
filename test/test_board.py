@@ -15,8 +15,9 @@ class TestTablero(unittest.TestCase):
     def test_mover_ficha_valido(self):
         # mover una ficha válida de la posición 0 a la 1
         ficha_origen = self.tablero.mostrar_contenedor()[0][-1]
-        self.tablero.mover_ficha(ficha_origen, 0, 1)
+        self.tablero.mover_ficha("Negra", 0, 1)  
         self.assertIn(ficha_origen, self.tablero.mostrar_contenedor()[1])
+
 
     def test_mover_ficha_desde_vacio_lanza_error(self):
         #nos devuelve error si queremos mover una ficha desde una posicion vacia
@@ -31,11 +32,14 @@ class TestTablero(unittest.TestCase):
 
     def test_validar_movimiento_valido(self):
         #Un movimiento válido a una casilla libre nos devuelve verdadero
-        self.assertTrue(self.tablero.validar_movimiento("Negra",1))
+        tiradas = [1, 2]  
+        self.assertTrue(self.tablero.validar_movimiento("Negra",0,1,tiradas))
 
     def test_validar_movimiento_invalido_por_rango(self):
         #testea que si el destino está fuera del rango 0-23 devuelva falso
-        self.assertFalse(self.tablero.validar_movimiento("Blanca",30))
+        tiradas = [1, 2]  # ejemplo, pon los valores que correspondan según el test
+        self.assertFalse(self.tablero.validar_movimiento("Blanca",30, 1,tiradas))
+        
 
     def test_enviar_a_barra(self):
         #si hay fichas en una posicion, debe enviarlas a la barra
@@ -64,18 +68,76 @@ class TestTablero(unittest.TestCase):
 
     def test_mover_desde_barra_sin_fichas(self):
         #si no hay fichas en la barra, no se debe mover nada
-        resultado = self.tablero.mover_desde_barra("Blanca",3)
+        resultado = self.tablero.mover_desde_barra("Blanca",0)
         self.assertFalse(resultado)
 
     def test_mover_desde_barra_con_ficha_valida(self):
         #mueve una ficha desde la barra a una posicion valida
         self.tablero.mostrar_barra()["Blanca"].append("Blanca")
-        resultado=self.tablero.mover_desde_barra("Blanca",3)
+        resultado = self.tablero.mover_desde_barra("Blanca", 22)  
         self.assertTrue(resultado)
-        self.assertIn("Blanca",self.tablero.mostrar_contenedor()[3])
+        self.assertIn("Blanca", self.tablero.mostrar_contenedor()[22])  
+
 
     def test_sacar_ficha_color_incorrecto(self):
         #si el color en la posición no coincide, no debe sacar ficha
         # en la posición 5 hay fichas blancas
         resultado=self.tablero.sacar_ficha("Negra",5)
+        self.assertFalse(resultado)
+
+    def test_mostrar_barra_vacia(self):
+        # Al iniciar, la barra debe estar vacía para ambos colores
+        barra = self.tablero.mostrar_barra()
+        self.assertEqual(barra, {"Blanca": [], "Negra": []})
+
+    def test_mostrar_afuera_vacio(self):
+        # Al iniciar, afuera debe estar vacío para ambos colores
+        afuera = self.tablero.mostrar_afuera()
+        self.assertEqual(afuera, {"Blanca": [], "Negra": []})
+
+    def test_todas_en_ultimo_cuadrante_blancas(self):
+        # Ponemos todas las fichas blancas en la casa (0-5)
+        tablero = Tablero()
+        for i in range(24):
+            tablero.mostrar_contenedor()[i] = []
+        tablero.mostrar_contenedor()[0] = ["Blanca"] * 15
+        self.assertTrue(tablero.todas_en_ultimo_cuadrante("Blanca"))
+
+    def test_todas_en_ultimo_cuadrante_negras(self):
+        # Ponemos todas las fichas negras en la casa (18-23)
+        tablero = Tablero()
+        for i in range(24):
+            tablero.mostrar_contenedor()[i] = []
+        tablero.mostrar_contenedor()[23] = ["Negra"] * 15
+        self.assertTrue(tablero.todas_en_ultimo_cuadrante("Negra"))
+
+    def test_todas_en_ultimo_cuadrante_falsa(self):
+        # Dejamos una ficha blanca fuera de su cuadrante
+        tablero = Tablero()
+        tablero.mostrar_contenedor()[10] = ["Blanca"]
+        self.assertFalse(tablero.todas_en_ultimo_cuadrante("Blanca"))
+
+    def test_mostrar_estado_devuelve_string(self):
+        # mostrar_estado debe devolver un string con 26 líneas (24 + barra + afuera)
+        estado = self.tablero.mostrar_estado()
+        self.assertIsInstance(estado, str)
+        lineas = estado.split("\n")
+        self.assertEqual(len(lineas), 26)
+
+    def test_mover_ficha_con_captura(self):
+        # Creamos situación con captura: blanca mueve a una posición con 1 negra
+        tablero = Tablero()
+        for i in range(24):
+            tablero.mostrar_contenedor()[i] = []
+        tablero.mostrar_contenedor()[0] = ["Negra"]  # una ficha negra sola
+        tablero.mostrar_contenedor()[1] = ["Blanca"]  # una blanca que se moverá
+        captura = tablero.mover_ficha("Blanca", 1, 0)
+        self.assertTrue(captura)
+        self.assertIn("Negra", tablero.mostrar_barra()["Negra"])
+
+    def test_mover_desde_barra_bloqueado(self):
+        # Preparo un destino bloqueado con 2 negras
+        self.tablero.mostrar_barra()["Blanca"].append("Blanca")
+        self.tablero.mostrar_contenedor()[10] = ["Negra", "Negra"]
+        resultado = self.tablero.mover_desde_barra("Blanca", 10)
         self.assertFalse(resultado)
