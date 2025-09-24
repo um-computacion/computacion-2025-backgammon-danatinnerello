@@ -60,70 +60,44 @@ def main(interactive: bool = False):
             print(f"Turno de:{juego.mostrar_turno()} ")
             # tirar dados
             tirada = dados.tirar_dados()
-            if len(tirada)== 4:
-                print(f"Tirada doble: {tirada}")
-            else:
-                print(f"Tirada: {tirada}")
+            print(f"Tirada: {tirada}")
             # cambiar posiicon de ficha : bucle de movimiento para el turno
             while dados.quedan_tiradas():
                 jugador_actual = juego.mostrar_turno()
-                print(f"Tiradas restantes:{dados.obtener_tiradas_restantes()}")
+                if not juego.hay_movimientos_posibles(jugador_actual):
+                    print(f"{jugador_actual.obtener_nombre()} no tiene movimientos posibles. Turno perdido.")
+                    juego.controlar_turnos()
+                    continue
+                else:
+                    print(f"Tiradas restantes:{dados.obtener_tiradas_restantes()}")
                 #mover desde la barra
                 try:
                     #si hay fichas en la barra las debe mover primero
                     if juego.mostrar_tablero().mostrar_barra()[jugador_actual.obtener_color()]:
                         dado_a_usar=int(input("Ingresa el valor del dado para mover desde la barra: "))
-                        if jugador_actual.obtener_color()=="Blanca":
-                            hacia=24-dado_a_usar
-                        else:# Negra
-                            hacia=dado_a_usar-1
-                        if dados.usar_tirada(dado_a_usar) and juego.mostrar_tablero().mover_desde_barra(jugador_actual.obtener_color(), hacia):
-                            print(f"ficha movida de la barra a la posiciion {hacia+1}")
-                        else:
-                            print("movimiento invalido desde la barra")
-                            continue
+                        juego.valida_mover_desde_barra(jugador_actual, dado_a_usar)
+                        print(f"Ficha movida desde la barra")
                     #movimiento normal y para sacarlas a afuera
                     else:
                         desde=int(input("mover desde posicion(1 - 24): ")) -1
                         hacia = int(input("mover hacia posicion(1-24 o 0 para sacar): "))
-                        # validaciones
-                        if desde< 0 or desde> 23:
-                            raise ValueError("La posicion 'desde' debe estar entre 1 y 24")
-                        if hacia!= -1 and (hacia< 0 or hacia> 23):
-                            raise ValueError("la posicion 'hacia' debe estar entre 1 y 24")
-                        contenedor=juego.mostrar_tablero().mostrar_contenedor()
-                        if not contenedor[desde]:
-                            raise ValueError(f"no hay fichas en la posicion {desde+1}")
-                        if contenedor[desde][-1] != jugador_actual.obtener_color():
-                            raise ValueError("esa ficha no te pertenece")
-                        # ejecutar movimiento
-                        if hacia== -1:
-                            # Sacar ficha 
-                            if juego.mostrar_tablero().todas_en_ultimo_cuadrante(jugador_actual.obtener_color()):
-                                dado_a_usar= (desde + 1) if jugador_actual.obtener_color() == "Blanca" else(24-desde)
-                                if dados.usar_tirada(dado_a_usar) and juego.mostrar_tablero().sacar_ficha(jugador_actual.obtener_color(), desde):
-                                    jugador_actual.sacar_ficha_a_afuera()
-                                    print(f"ficha sacada desde {desde+1}")
-                                else:
-                                    print("No puedes sacar una ficha desde esa posicion con el dado actual")
-                            else:
-                                print("no puedes sacar fichas. No todas estan en el ultimo cuadrante.")
-                        else:
-                            # Movimiento normal
-                            dado_a_usar=abs(hacia - desde)
-                            if (dados.usar_tirada(dado_a_usar) and juego.mostrar_tablero().validar_movimiento(jugador_actual.obtener_color(),hacia)):
-                                captura= juego.mostrar_tablero().mover_ficha(jugador_actual.obtener_color(),desde,hacia)
-                                if captura:
-                                    print(f"capturaste una ficha enemiga en la posicion {hacia+1}")
-                                print(f"ficha movida de {desde+1} a {hacia+1}")
-                            else:
-                                print("movimiento invalido")
 
+                        # ejecutar movimiento
+                        if hacia== 0:
+                            # Sacar ficha 
+                            juego.valida_sacar_ficha(jugador_actual, desde)
+                            print(f"Ficha sacada desde {desde+1}")
+                        else:
+                            captura = juego.valida_mover_ficha(jugador_actual, desde, hacia-1)
+                            if captura:
+                                print(f"Capturaste una ficha enemiga en la posición {hacia}")
+                            print(f"Ficha movida de {desde+1} a {hacia}")
                 except ValueError as e:
-                    print("Error:",e)
+                    print("Error:", e)
+
 
         except ValueError as e:
-            print("Error:",e)
+                    print("Error:", e)
 
         print(juego.mostrar_tablero().mostrar_estado())
 

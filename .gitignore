@@ -1,1 +1,36 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Entornos virtuales
+venv/
+env/
+.venv/
+
+# IDE / editores
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Distribución / paquetes construidos
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+
+# Logs y bases de datos locales
+*.log
+*.sqlite3
+*.db
+
+# Archivos temporales de editores
+*.swp
+*.swo
+*~
+
+# Cachés de herramientas
 .coverage
+.pytest_cache/
+.mypy_cache/
