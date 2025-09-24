@@ -1,12 +1,12 @@
 Name               Stmts   Miss  Cover   Missing
 ------------------------------------------------
 cli/__init__.py        0      0   100%
-cli/cli.py            86     11    87%   76, 90, 115, 121-131, 137
+cli/cli.py            90      5    94%   79, 93, 126, 136, 142
 core/__init__.py       0      0   100%
-core/board.py         70      4    94%   58, 71, 90, 96
+core/board.py         81      7    91%   55-57, 69, 82, 101, 107
 core/checker.py       14      0   100%
 core/dice.py          24      1    96%   40
 core/game.py          32      0   100%
 core/player.py        30      1    97%   20
 ------------------------------------------------
-TOTAL                256     17    93%
+TOTAL                271     14    95%
