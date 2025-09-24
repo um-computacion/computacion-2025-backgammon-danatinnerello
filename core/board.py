@@ -94,23 +94,26 @@ class Tablero:
             ficha = self.__contenedor__[posicion].pop()
             self.__barra__[ficha].append(ficha)
 
-    def mover_desde_barra(self, color, hacia):
-        # si no hay fichas en la barra,no se puede mover
+    def valida_mover_desde_barra(self, color, hacia,tiradas_restantes = None):
         if not self.__barra__[color]:
             return False
-        # valida rango
         if hacia < 0 or hacia > 23:
             return False
-        # valida el bloqueo: si el destino tiene 2 o mas fichas enemigas
         destino = self.__contenedor__[hacia]
         if len(destino) >= 2 and destino[0] != color:
             return False
+    
+         # validacion extra si tiradas_restantes se pasa
+        if tiradas_restantes is not None:
+            diferencia = hacia if color == "Negra" else 24 - hacia
+            if diferencia not in tiradas_restantes:
+                return False
+        return True
 
-        # si pasa las validaciones, se puede mover
+    def aplicar_movimiento_desde_barra(self, color, hacia):
         ficha = self.__barra__[color].pop()
         self.__contenedor__[hacia].append(ficha)
         return True
-
 
     def sacar_ficha(self, color, desde):
         #Cuando todas las fichas están en el ultimo cuadrante del contendor, se pueden sacar

@@ -34,14 +34,4 @@ class Jugador:
             return True
         return False
     
-    def agregar_a_barra(self):
-        self.__barra__ += 1 #agrega una ficha a la barra
-
-    def quitar_de_barra(self):
-        if self.__barra__ > 0: #si hay mas de una ficha en la barra
-            self.__barra__ -= 1 # le resta una
-            return True
-        return False
-
-    def tiene_en_barra(self): #muestra si tiene fichas en la barra
-        return self.__barra__ > 0
+   
