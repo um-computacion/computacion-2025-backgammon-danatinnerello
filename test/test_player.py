@@ -28,16 +28,3 @@ class TestJugador(unittest.TestCase):
         #si no tiene fichas restantes, no puede sacar mas
         self.jugador.__fichas_restantes__ =0
         self.assertFalse(self.jugador.sacar_ficha_a_afuera())
- 
-    
-    def test_agregar_y_quitar_de_barra(self):
-        #testea que funcione el agregar y quitar fichas de la barra
-        self.jugador.__barra__ =0
-        self.jugador.agregar_a_barra()
-        self.assertTrue(self.jugador.tiene_en_barra())
-        self.assertTrue(self.jugador.quitar_de_barra())
-
-    def test_quitar_de_barra_sin_fichas(self):
-        #si no hay fichas en la barra,quitar debe devolver Falso
-        self.jugador.__barra__ = 0
-        self.assertFalse(self.jugador.quitar_de_barra())

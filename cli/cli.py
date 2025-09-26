@@ -2,6 +2,14 @@ from core.game import Juego
 from core.player import Jugador
 from core.board import Tablero
 from core.dice import Dados
+from core.excepcions import (
+    EntradaInvalidaError,
+    MovimientoInvalidoError,
+    SacarFichaError,
+    RendicionError,
+    JuegoTerminadoError,
+)
+
 
 '''
 menu:
@@ -15,102 +23,73 @@ verificar posiciones
 verificar ganador 
 
 '''
-def main(interactive: bool = False):
-    """
-    interactive: bool
-        - False(default):se ejecuta en modo pruebas compatible con los tests automatizados
-        - True:habilita un menu de control con opciones para rendirse o salir
-          del juego,pensado para uso interactivo en la terminal
-    """
+
+
+def pedir_int(mensaje: str) -> int:
+    try:
+        return int(input(mensaje))
+    except ValueError:
+        raise EntradaInvalidaError("Debe ingresar un numero entero")
+
+def main():
     print("Bienvenidos al juego Backgammon")
-    print("Inicio del juego")
-    nombre1 = input("Ingrese el nombre del jugador 1 (fichas Blanca): ")
-    nombre2 = input("Ingrese el nombre del jugador 2 ( fichas Negra): ")
-    jugador1 = Jugador(nombre1, "Blanca")
-    jugador2 = Jugador(nombre2, "Negra")
-    juego = Juego(jugador1, jugador2)
-    dados = Dados()
-    while True:
-        print("Tablero")
-        print(juego.mostrar_tablero().mostrar_estado())    
-        try:
-            # opciones de control
-            # menú solo si interactive=True
-            if interactive:
-                '''
-                Si interactive=True, se muestra un menu de control al inicio de cada turno
-                Si la opcion es invalida, se vuelve a pedir'''
-                print("Opciones: ")
-                print("1- Jugar turno")
-                print("2- Rendirse")
-                print("3- Salir del juego")
-                opcion= input("Seleccione una opcion: ")
-                if opcion== "2":
-                    print(f"{juego.mostrar_turno().obtener_nombre()} se ha rendido")
-                    break
-                elif opcion== "3":
-                    print("Juego finalizado por el usuario")
-                    break
-                elif opcion!= "1":
-                    print("Opcion invalida")
-                    continue
+    nombre1= input("Jugador 1 (Blanca): ")
+    nombre2= input("Jugador 2 (Negra): ")
+    jugador1= Jugador(nombre1, "Blanca")
+    jugador2= Jugador(nombre2, "Negra")
+    juego= Juego(jugador1, jugador2)
+    while not juego.mostrar_juego_terminado():
+        jugador = juego.mostrar_turno()
+        print(f"Turno de {jugador.obtener_nombre()} ({jugador.obtener_color()})")
+        tirada = juego.__dados__.tirar_dados()
+        print("Tirada:", tirada)
+        while juego.__dados__.quedan_tiradas():
+            try:
+                print("1:Mover ficha")
+                print("2:Rendirse")
+                print("3:Finalizar juego")
+                opcion= pedir_int("Opcion: ")
 
-            # inicio del turno
-            # decir a quien le toca tirar
-            print(f"Turno de:{juego.mostrar_turno()} ")
-            # tirar dados
-            tirada = dados.tirar_dados()
-            print(f"Tirada: {tirada}")
-            # cambiar posiicon de ficha : bucle de movimiento para el turno
-            while dados.quedan_tiradas():
-                jugador_actual = juego.mostrar_turno()
-                if not juego.hay_movimientos_posibles(jugador_actual):
-                    print(f"{jugador_actual.obtener_nombre()} no tiene movimientos posibles. Turno perdido.")
-                    juego.controlar_turnos()
-                    continue
-                else:
-                    print(f"Tiradas restantes:{dados.obtener_tiradas_restantes()}")
-                #mover desde la barra
-                try:
-                    #si hay fichas en la barra las debe mover primero
-                    if juego.mostrar_tablero().mostrar_barra()[jugador_actual.obtener_color()]:
-                        dado_a_usar=int(input("Ingresa el valor del dado para mover desde la barra: "))
-                        juego.valida_mover_desde_barra(jugador_actual, dado_a_usar)
-                        print(f"Ficha movida desde la barra")
-                    #movimiento normal y para sacarlas a afuera
-                    else:
-                        desde=int(input("mover desde posicion(1 - 24): ")) -1
-                        hacia = int(input("mover hacia posicion(1-24 o 0 para sacar): "))
+                if opcion== 1:
+                    origen= pedir_int("Mover ficha desde: ")
+                    destino= pedir_int("Hasta: ")
 
-                        # ejecutar movimiento
-                        if hacia== 0:
-                            # Sacar ficha 
-                            juego.valida_sacar_ficha(jugador_actual, desde)
-                            print(f"Ficha sacada desde {desde+1}")
+                    if origen== 0:  # desde barra
+                        juego.valida_mover_desde_barra(jugador,destino)
+                        print(f"Ficha movida desde la barra a {destino}")
+                    elif destino== -1:  # sacar ficha
+                        juego.valida_sacar_ficha(jugador,origen)
+                        print(f"Ficha sacada desde {origen}")
+                    else:  # movimiento normal
+                        captura = juego.valida_mover_ficha(jugador, origen, destino)
+                        if captura:
+                            print("Capturaste una ficha enemiga")
                         else:
-                            captura = juego.valida_mover_ficha(jugador_actual, desde, hacia-1)
-                            if captura:
-                                print(f"Capturaste una ficha enemiga en la posición {hacia}")
-                            print(f"Ficha movida de {desde+1} a {hacia}")
-                except ValueError as e:
-                    print("Error:", e)
+                            print(f"Ficha movida de {origen} a {destino}")
 
+                elif opcion== 2:
+                    raise RendicionError
+                elif opcion== 3:
+                    raise JuegoTerminadoError
+                else:
+                    raise EntradaInvalidaError("Opcion no valida")
+                
+                #verifica ganador
+                ganador= juego.verificar_ganador()
+                if ganador:
+                    print(f"Ganoo {ganador.obtener_nombre()} ({ganador.obtener_color()})")
+                    return
+                
+                juego.controlar_turnos()  #cambia turno
 
-        except ValueError as e:
-                    print("Error:", e)
-
-        print(juego.mostrar_tablero().mostrar_estado())
-
-        # verificar ganador
-        ganador=juego.verificar_ganador()
-        if ganador:
-            print(f"ganoo {ganador.obtener_nombre()}.Color {ganador.obtener_color()} ")
-            break
-
-        juego.controlar_turnos()  # cambio de turno
-      
-
-
+            except (EntradaInvalidaError, MovimientoInvalidoError, SacarFichaError) as e:
+                print(f"Error: {e}")
+            except RendicionError:
+                print(f"{jugador.obtener_nombre()} se ha rendido")
+                return
+            except JuegoTerminadoError:
+                print("Juego finalizado por el usuario")
+                return
+        
 if __name__ == "__main__":
-    #ejecutar en modo interactivo cuando se corre como script
-    main(interactive = True)
+    main()
