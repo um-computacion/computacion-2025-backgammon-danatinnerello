@@ -10,7 +10,9 @@ class TestJuego(unittest.TestCase):
     def setUp(self):
         self.j1 = Jugador("Alice", "Blanca")
         self.j2 = Jugador("Bob", "Negra")
-        self.juego = Juego(self.j1, self.j2, tablero=Tablero(), dados=Dados())
+        self.tablero = Tablero()
+        self.dados = Dados()
+        self.juego = Juego(self.j1, self.j2, self.tablero, self.dados)
 
     def test_turnos_alternan(self):
         turno1 = self.juego.mostrar_turno()
@@ -118,6 +120,76 @@ class TestJuego(unittest.TestCase):
         self.juego.__tablero__.mostrar_barra = lambda: {"Blanca": [], "Negra": []}
         self.juego.__tablero__.validar_movimiento = lambda c, d, h, t: True
         self.assertTrue(self.juego.hay_movimientos_posibles(self.j1))
+
+    def test_hay_movimientos_posibles_con_barra_bloqueada(self):
+        # poner una ficha blanca en la barra
+        self.tablero.mostrar_barra()["Blanca"].append("Blanca")
+        # bloquear todas las entradas de la blanca con 2 negras
+        for i in range(18, 24):
+            self.tablero.mostrar_contenedor()[i] = ["Negra", "Negra"]
+        # forzamos los dados
+        self.dados.__tiradas_restantes__ = [1, 2]
+        self.assertFalse(self.juego.hay_movimientos_posibles(self.j1))
+
+    def test_hay_movimientos_posibles_con_barra_libre(self):
+        self.tablero.mostrar_barra()["Blanca"].append("Blanca")
+        self.dados.__tiradas_restantes__ = [1]
+        # destino (23) está libre
+        self.assertTrue(self.juego.hay_movimientos_posibles(self.j1))
+
+    def test_controlar_turnos_alterna_correctamente(self):
+        turno_inicial = self.juego.mostrar_turno()
+        self.juego.controlar_turnos()
+        self.assertNotEqual(turno_inicial, self.juego.mostrar_turno())
+
+    def test_verificar_ganador_detecta_correctamente(self):
+        # simulamos que j1 ya sacó todas sus fichas
+        for _ in range(15):
+            self.j1.sacar_ficha_a_afuera()
+        ganador = self.juego.verificar_ganador()
+        self.assertEqual(ganador, self.j1)
+        self.assertTrue(self.juego.mostrar_juego_terminado())
+
+#test para aumentar la cobertura 
+    
+    def test_mostrar_getters_funcionan(self):
+        # cubre los getters simples
+        self.assertEqual(self.juego.mostrar_jugador1(), self.j1)
+        self.assertEqual(self.juego.mostrar_jugador2(), self.j2)
+        self.assertFalse(self.juego.mostrar_juego_terminado())
+        self.assertEqual(self.juego.mostrar_tablero(), self.tablero)
+        self.assertEqual(self.juego.mostrar_turno(), self.j1)
+
+    def test_valida_sacar_ficha_con_dado_mayor_valido(self):
+        # vaciar todo el tablero
+        for i in range(24):
+            self.tablero.mostrar_contenedor()[i] = []
+        # poner solo una ficha blanca en la casa más cercana
+        self.tablero.mostrar_contenedor()[0] = ["Blanca"]
+        # simular que todas están en el último cuadrante
+        self.tablero.todas_en_ultimo_cuadrante = lambda c: True
+        # dado mayor al necesario
+        self.dados.__tiradas_restantes__ = [6]
+
+        self.juego.valida_sacar_ficha(self.j1, 0)
+        self.assertEqual(self.j1.__fichas_restantes__, 14)
+
+
+    def test_valida_mover_desde_barra_valido(self):
+        # poner ficha en la barra negra
+        self.tablero.mostrar_barra()["Negra"].append("Negra")
+        # dado 3 → entra en posición 2
+        self.dados.__tiradas_restantes__ = [3]
+        result = self.juego.valida_mover_desde_barra(self.j2, 3)
+        self.assertTrue(result)
+        self.assertIn("Negra", self.tablero.mostrar_contenedor()[2])
+
+    def test_verificar_ganador_marca_juego_terminado(self):
+        self.j1.__fichas_restantes__ = 0
+        self.assertFalse(self.juego.mostrar_juego_terminado())
+        ganador = self.juego.verificar_ganador()
+        self.assertEqual(ganador, self.j1)
+        self.assertTrue(self.juego.mostrar_juego_terminado())
 
 
 if __name__ == "__main__":

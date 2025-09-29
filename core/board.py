@@ -1,3 +1,7 @@
+from core.excepcions import MovimientoInvalidoError 
+
+
+
 '''Responsabilidades:
 
 -saber que fichas estan en cada punto
@@ -41,15 +45,16 @@ class Tablero:
         return self.__afuera__
     
     def mover_ficha(self,color,desde,hacia):
-        #verifica que la posiicon este entre 0 y 23
+        # verifica que la posición esté entre 0 y 23
         if desde < 0 or desde > 23 or hacia < 0 or hacia > 23:
-            raise ValueError("Punto invalido. Debe estar entre 1 y 24.")
-        # verifica que contenga algo la posicion
+            raise MovimientoInvalidoError("Punto inválido. Debe estar entre 1 y 24.")
+        # verifica que contenga algo la posición
         if not self.__contenedor__[desde]:
-            raise ValueError(f"No hay fichas en la posicion {desde} ")
+            raise MovimientoInvalidoError(f"No hay fichas en la posición {desde}")
         # verifica que la ficha a mover sea del color correcto
         if self.__contenedor__[desde][-1] != color:
-            raise ValueError("Esa ficha no te pertenece")
+            raise MovimientoInvalidoError("Esa ficha no te pertenece")
+
         #guarda ficha
         destino= self.__contenedor__[hacia]
         if len(destino) >= 2 and destino[0] != color:
@@ -83,7 +88,14 @@ class Tablero:
         if len(destino) >= 2 and destino[0] != color:
             return False
         # Verifica si el movimiento corresponde a alguna tirada disponible
+        # validacion de direccion
+        if color == "Blanca" and hacia >= desde:
+            return False
+        if color == "Negra" and hacia <= desde:
+            return False
+        
         diferencia = abs(hacia - desde)
+
         if diferencia not in tiradas_restantes:
             return False
         return True

@@ -1,5 +1,6 @@
 import unittest
 from core.board import Tablero
+from core.excepcions import MovimientoInvalidoError
 
 class TestTablero(unittest.TestCase):
     def setUp(self):
@@ -21,12 +22,12 @@ class TestTablero(unittest.TestCase):
 
     def test_mover_ficha_desde_vacio_lanza_error(self):
         #nos devuelve error si queremos mover una ficha desde una posicion vacia
-        with self.assertRaises(ValueError):
+        with self.assertRaises(MovimientoInvalidoError):
             self.tablero.mover_ficha("Blanca", 2, 3)
 
     def test_mover_ficha_fuera_de_rango(self):
         #nos devuelve error si queremos poner una ficha fuera del rango de posiciones
-        with self.assertRaises(ValueError):
+        with self.assertRaises(MovimientoInvalidoError):
             self.tablero.mover_ficha("Negra", 0, 30)
 
     def test_validar_movimiento_valido(self):
@@ -55,7 +56,7 @@ class TestTablero(unittest.TestCase):
  
     def test_mover_ficha_desde_fuera_de_rango(self):
         #testea que lance error si la posicion de origen esto fuera del rango
-        with self.assertRaises(ValueError):
+        with self.assertRaises(MovimientoInvalidoError):
             self.tablero.mover_ficha("Negra", -1, 5)
 
     def test_enviar_a_barra_posicion_vacia(self):
@@ -141,6 +142,38 @@ class TestTablero(unittest.TestCase):
         self.tablero.mostrar_contenedor()[10] = ["Negra", "Negra"]
         resultado = self.tablero.valida_mover_desde_barra("Blanca", 10)
         self.assertFalse(resultado)
+
+    def test_enviar_a_barra_agrega_ficha_correctamente(self):
+        # ponemos una ficha blanca en posición 0
+        self.tablero.mostrar_contenedor()[0] = ["Blanca"]
+        self.tablero.enviar_a_barra(0)
+        self.assertIn("Blanca", self.tablero.mostrar_barra()["Blanca"])
+        self.assertEqual(self.tablero.mostrar_contenedor()[0], [])
+
+    def test_aplicar_movimiento_desde_barra(self):
+        self.tablero.mostrar_barra()["Negra"].append("Negra")
+        self.tablero.aplicar_movimiento_desde_barra("Negra", 3)
+        self.assertIn("Negra", self.tablero.mostrar_contenedor()[3])
+
+    def test_todas_en_ultimo_cuadrante_true(self):
+        # forzamos a que todas las blancas estén en 0..5
+        self.tablero = Tablero()
+        self.tablero.__contenedor__ = [[] for _ in range(24)]
+        self.tablero.__contenedor__[0] = ["Blanca"] * 15
+        self.assertTrue(self.tablero.todas_en_ultimo_cuadrante("Blanca"))
+
+    def test_todas_en_ultimo_cuadrante_false(self):
+        # dejamos una ficha blanca fuera de la casa
+        self.tablero.__contenedor__[10].append("Blanca")
+        self.assertFalse(self.tablero.todas_en_ultimo_cuadrante("Blanca"))
+
+    def test_mostrar_estado_devuelve_string(self):
+        estado = self.tablero.mostrar_estado()
+        self.assertIsInstance(estado, str)
+        self.assertIn("Barra", estado)
+        self.assertIn("Afuera", estado)
+
+    
 
 
 if __name__ == "__main__":
