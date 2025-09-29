@@ -6,14 +6,14 @@ Name                 Stmts   Miss  Cover   Missing
 cli/__init__.py          0      0   100%
 cli/cli.py              62      5    92%   31-32, 80-81, 95
 core/__init__.py         0      0   100%
-core/board.py          100     11    89%   33-35, 52, 56, 84, 88, 101, 108-110
+core/board.py          106     13    88%   37-39, 56, 61, 89, 93, 95, 100, 113, 120-122
 core/checker.py         14      0   100%
 core/dice.py            24      1    96%   40
 core/excepcions.py      16      0   100%
-core/game.py            72     11    85%   28, 31, 58-61, 69-71, 79, 92
+core/game.py            91     14    85%   58-61, 71, 74-77, 84-88, 96
 core/player.py          21      2    90%   17, 20
 --------------------------------------------------
-TOTAL                  309     30    90%
+TOTAL                  334     35    90%
 
 ```
 ## Pylint Report
