@@ -45,6 +45,10 @@ def main():
         print("Tirada:", tirada)
         while juego.__dados__.quedan_tiradas():
             try:
+                tablero= juego.__tablero__.mostrar_estado()
+                print(tablero)
+                print(f"Turno de {jugador.obtener_nombre()} ({jugador.obtener_color()})")
+                print("Tirada:", tirada)
                 print("1:Mover ficha")
                 print("2:Rendirse")
                 print("3:Finalizar juego")

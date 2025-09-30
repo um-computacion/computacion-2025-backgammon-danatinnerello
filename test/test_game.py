@@ -171,7 +171,7 @@ class TestJuego(unittest.TestCase):
         # dado mayor al necesario
         self.dados.__tiradas_restantes__ = [6]
 
-        self.juego.valida_sacar_ficha(self.j1, 0)
+        self.juego.valida_sacar_ficha(self.j1, 1)
         self.assertEqual(self.j1.__fichas_restantes__, 14)
 
 
@@ -190,6 +190,53 @@ class TestJuego(unittest.TestCase):
         ganador = self.juego.verificar_ganador()
         self.assertEqual(ganador, self.j1)
         self.assertTrue(self.juego.mostrar_juego_terminado())
+
+    def test_valida_sacar_ficha_dado_mayor_no_valido_por_fichas_mas_lejanas(self):
+        # Poner fichas en posiciones más lejanas
+        for i in range(24):
+            self.tablero.mostrar_contenedor()[i] = []
+        self.tablero.mostrar_contenedor()[0] = ["Blanca"]   # ficha en la casilla 1
+        self.tablero.mostrar_contenedor()[1] = ["Blanca"]   # otra más lejana en la casa
+        self.tablero.todas_en_ultimo_cuadrante = lambda c: True
+        self.dados.__tiradas_restantes__ = [6]  # dado mayor
+
+        with self.assertRaises(SacarFichaError):
+            self.juego.valida_sacar_ficha(self.j1, 1)  # casilla 1 humana
+
+    def test_valida_sacar_ficha_para_negras_con_dado_exactoy_mayor(self):
+        # Vaciar tablero
+        for i in range(24):
+            self.tablero.mostrar_contenedor()[i] = []
+        # ficha negra en la casilla 24 (índice 23)
+        self.tablero.mostrar_contenedor()[23] = ["Negra"]
+        self.tablero.todas_en_ultimo_cuadrante = lambda c: True
+        self.dados.__tiradas_restantes__ = [1]  # dado exacto para negras en 24
+
+        self.juego.valida_sacar_ficha(self.j2, 24)  # 24 humano
+        self.assertEqual(self.j2.__fichas_restantes__, 14)
+
+    def test_valida_mover_desde_barra_blancas(self):
+        # ficha blanca en barra
+        self.tablero.mostrar_barra()["Blanca"].append("Blanca")
+        # dado 6 → entra en casilla 19 (24-6 = 18 → humano 19)
+        self.dados.__tiradas_restantes__ = [6]
+        self.tablero.valida_mover_desde_barra = lambda c, h: True
+
+        result = self.juego.valida_mover_desde_barra(self.j1, 6)
+        self.assertTrue(result)
+
+    def test_valida_mover_desde_barra_falla_a_pesar_de_dado(self):
+        self.tablero.mostrar_barra()["Blanca"].append("Blanca")
+        self.dados.__tiradas_restantes__ = [4]
+        # aunque el dado está, no se puede entrar
+        self.tablero.valida_mover_desde_barra = lambda c, h: False
+        with self.assertRaises(MovimientoInvalidoError):
+            self.juego.valida_mover_desde_barra(self.j1, 4)
+
+    def test_hay_movimientos_posibles_sin_tiradas(self):
+        self.dados.__tiradas_restantes__ = []
+        self.assertFalse(self.juego.hay_movimientos_posibles(self.j1))
+
 
 
 if __name__ == "__main__":

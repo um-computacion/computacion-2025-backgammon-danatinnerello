@@ -6,7 +6,6 @@
 -o si esta afuera
 
 
-
 '''
 class Ficha:
     def __init__(self, color, posicion=None):
