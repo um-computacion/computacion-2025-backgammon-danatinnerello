@@ -78,7 +78,7 @@ y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
-## [0.1.0] - 2025-09-03 -  Sprint 2 
+## [1.1.0] - 2025-09-03 -  Sprint 2 
 ### Agregado
 - Implementacion de integracion continua: pylint
 - Descarga de librerias requeridas
@@ -110,13 +110,81 @@ y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 
 - Modificacion en board, en el metodo mostrar_contenedor: return
 
-
-
 ### Corregido
-
-
 
 ### Emilinado
 
 
- 
+## [1.1.1] - 2025-09-03 -  Sprint 3
+
+# Agregado
+
+- Implementacion de una estructura de control para que el que juegue pueda abandonar o salir del juego cuando quiera
+- Al implementar lo anterior tenia que cambiar todos los test y para no hacerlo implemente el interactive, que cuando era verdadero se ejecutaba la estructura de control junto con todo el cli y si era falso me servia para que los test sigan corriendo bien.
+- Agregue algunos test para que cubran lo nuevo en el cli
+- Añadi en el metodo mover_ficha la validacion que si es capturada la mande a barra
+
+- Agregue test extras para cubrir lo necesario del codigo cli
+
+- Añadi el metodo imprimir_contenedor
+
+- Agregue verificacion en el metodo mover_ficha en la clase tablero para que verifique el color, verifique una captura, guarda y elimine ficha segun el movimiento
+- En validar_movimiento en la clase tablero tambien agregue validaciones, que estaban en el cli y me di cuenta que no iban ahi. 
+- En mover_desde_barra lo mismo, agregue validaciones que tenia en el cli, para separar la logica de la interaccion
+- Añadi varios test para cubrir los posibles casos de la clase tablero y verificar que funcione.
+
+- Agregue el metodo valida_mover_ficha, valida_sacar_ficha, valida_mover_desde_barra y hay_movimientos_posibles en game que estaban en board o en el cli. 
+
+- Agregue excepciones personalizadas 
+- Realice un cli nuevo, limpio solo con interacciion y alicando las excepciones personalizadas
+
+- Añadi validaciones de direccion ya que depende la ficha van en direcciones contrarias
+- Añadi test para llegar a la cobertura en board y en game
+
+
+# Modificado
+- Modificacion de algunos test devido a la implementacion del interactive
+- Cambios en el cli para que imprima un mensaje si la ficha fue captura o si fue un movimiento normal
+- Modifique el metodo en tablero para ver el estado del mismo de una manera distinta.
+- Modificacion de algunos test del cli debido al cambio de indice.
+
+- Modificacion de algunos test del cli para que funcionen
+
+- Modifique el metodo mostrar_contener 
+
+- Modifique algunos test de la clase tablero debido a los cambios que realice en la clase.
+
+- Cree la carpeta .gitignore y añadi todo lo que debia ignorarse.
+- Luego de la clase con el profe daniel me di cuenta que mi codigo por partes no cumplia con los principios SOLID netonces realice modificaciones.
+- Añadi una validacion para que capture si no tiene movimientos el jugador.(en el cli) 
+- Saque validaciones y solo llame metodos de las clases.
+
+
+
+# Corregido
+
+- Corregi en el cli el print para tirar dados, para que imprima distinto si es tirada normal o doble.
+- Correcciones para que el usuario ingrese losmovimientos de 1-24 y no de 0-23. Esto iplico cambios en algunos metodos del tablero
+
+- Cambie la verificacion: 'if (hacia < 0 or hacia > 23) ^ (desde < 0 or desde > 23):' por ' if desde < 0 or desde > 23 or hacia < 0 or hacia > 23:' 
+
+- Tengo varios test donde no cambie nada del codigo porque me saliaun error para mergear donde decia que se habia modificado el coverage o algo asi. Entonces cree la carpeta .gitignore y ahi puse todo lo que debia ignorar al mergear, asi lo resolvi. Con ayuda de IA.
+
+- En tablero modifique el metodo valida_mover_desde_barra por si tiradas_restantes se pasa
+- Separe metodos que tenian mas de una responsabilidad por ejemplo las validaciones po un lado y la funcion por otro.
+- Cambie el constructor en game
+
+- En game cambie las ValueError por mis excepiones personalizadas 
+- Y eso hizo que tenga que corregir algunos test de board, game, player y todos los del cli.
+
+- En board tambien cambie ValueError por mis excepciones personalizadas 
+
+- Corregi el metodo valida_sacar_ficha para que cuando ya estan todas en el ultimo cuadrante, si te sale un dado mayor igual puede salir afuera.
+
+- Corregi algunos test en board con mis excepciones personalizadas
+
+
+# Emilinado
+
+- Elimine metodos de player que no servian o no los utlizaba
+- Elimine todo el cli anterior donde tenia logica e interaccion mezcladas y tambien habia agregado el interactive
