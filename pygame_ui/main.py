@@ -9,6 +9,7 @@ Responsabilidad:
 """
 
 import pygame
+from pygame_ui.board_renderer import Tablero
 
 
 def main():
@@ -18,6 +19,8 @@ def main():
     pygame.display.set_caption("Backgammon - Pygame")
 
     reloj = pygame.time.Clock()
+    tablero = Tablero(pantalla)
+
   
     corriendo = True
     while corriendo:
@@ -30,6 +33,7 @@ def main():
         pantalla.fill((220, 190, 160))
 
         # Dibujar tablero
+        tablero.dibujar_tablero()
       
         # Actualizar pantalla
         pygame.display.flip()
