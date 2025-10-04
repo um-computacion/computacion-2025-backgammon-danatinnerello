@@ -34,6 +34,23 @@ def main():
 
         # Dibujar tablero
         tablero.dibujar_tablero()
+
+        # Estado inicial del backgammon
+        estado = {
+            24: {"color": "blanco", "cantidad": 2},
+            13: {"color": "blanco", "cantidad": 5},
+            8:  {"color": "blanco", "cantidad": 3},
+            6:  {"color": "blanco", "cantidad": 5},
+
+            1:  {"color": "negro", "cantidad": 2},
+            12: {"color": "negro", "cantidad": 5},
+            17: {"color": "negro", "cantidad": 3},
+            19: {"color": "negro", "cantidad": 5},
+        }
+
+        # Dibujar fichas
+        tablero.dibujar_fichas(estado)
+
       
         # Actualizar pantalla
         pygame.display.flip()
