@@ -22,7 +22,7 @@ verificar tiradas
 verificar posiciones 
 verificar ganador 
 
-'''
+'''                #    añadir validaciones
 
 
 def pedir_int(mensaje: str) -> int:

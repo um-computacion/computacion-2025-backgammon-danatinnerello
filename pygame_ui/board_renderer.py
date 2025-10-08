@@ -29,23 +29,11 @@ class Tablero:
         color_borde = (60, 40, 30)
 
         # Barra central
-        x_barra = 6 * self.ancho_triangulo
+        x_barra = (self.ancho / 2) - (self.ancho_barra / 2)
         pygame.draw.rect(self.pantalla,color_barra_central,
             pygame.Rect(x_barra, 0, self.ancho_barra, self.alto))
         pygame.draw.rect(self.pantalla,color_borde,
             pygame.Rect(x_barra, 0, self.ancho_barra, self.alto),2)
-
-        # Barra exterior izquierda
-        pygame.draw.rect(self.pantalla,color_barra_central,
-            pygame.Rect(0, 0, self.ancho_barra // 2, self.alto))
-        pygame.draw.rect(self.pantalla,color_borde,
-            pygame.Rect(0, 0, self.ancho_barra // 2, self.alto),2)
-
-        # Barra exterior derecha
-        pygame.draw.rect(self.pantalla,color_barra_central,
-            pygame.Rect(self.ancho - self.ancho_barra // 2, 0, self.ancho_barra // 2, self.alto))
-        pygame.draw.rect(self.pantalla,color_borde,
-            pygame.Rect(self.ancho - self.ancho_barra // 2, 0, self.ancho_barra // 2, self.alto),2)
 
         #Parte superior izquierda(6 triangulos)
         for i in range(6):
@@ -57,7 +45,7 @@ class Tablero:
 
         #Parte superior derecha(6 triangulos)
         for i in range(6):
-            x = (i + 7) * self.ancho_triangulo + self.ancho_barra // 2
+            x = x_barra + self.ancho_barra + (i * self.ancho_triangulo)
             puntos = [(x, 0),
                     (x + self.ancho_triangulo, 0),
                     (x + self.ancho_triangulo // 2, self.alto_triangulo)]
@@ -73,40 +61,60 @@ class Tablero:
 
         #Parte inferior derecha (6 triangulos)
         for i in range(6):
-            x = (i + 7) * self.ancho_triangulo + self.ancho_barra // 2
+            x = x_barra + self.ancho_barra + (i * self.ancho_triangulo)
             puntos = [(x, self.alto),
                     (x + self.ancho_triangulo, self.alto),
                     (x + self.ancho_triangulo // 2, self.alto - self.alto_triangulo)]
             pygame.draw.polygon(self.pantalla, colores[i % 2], puntos)
 
+
+        # Barra exterior izquierda
+        pygame.draw.rect(self.pantalla,color_barra_central,
+            pygame.Rect(0, 0, self.ancho_barra // 2, self.alto))
+        pygame.draw.rect(self.pantalla,color_borde,
+            pygame.Rect(0, 0, self.ancho_barra // 2, self.alto),2)
+
+        # Barra exterior derecha
+        pygame.draw.rect(self.pantalla,color_barra_central,
+            pygame.Rect(self.ancho - self.ancho_barra // 2, 0, self.ancho_barra // 2, self.alto))
+        pygame.draw.rect(self.pantalla,color_borde,
+            pygame.Rect(self.ancho - self.ancho_barra // 2, 0, self.ancho_barra // 2, self.alto),2)
+
     def dibujar_fichas(self, estado: dict):
-        """Dibuja las fichas en el tablero según el estado del juego"""
+        """Dibuja las fichas en el tablero según el estado del juego con punto 1 arriba a la derecha"""
         for punto, datos in estado.items():
             color = (255, 255, 255) if datos["color"] == "blanco" else (0, 0, 0)
             cantidad = datos["cantidad"]
 
-            # Ajuste según el lado del tablero (barra en el medio)
-            if punto <= 12:  # parte inferior (1 a 12)
+            # --- PARTE SUPERIOR (1–12) ---
+            if punto <= 12:
+                # Los triángulos van de derecha a izquierda
                 if punto <= 6:
-                    # Triángulos de la derecha del jugador negro
-                    x = (6 - punto) * self.ancho_triangulo + self.ancho_triangulo // 2 + self.ancho_barra // 2 + (7 * self.ancho_triangulo)
+                    # Triángulos de la derecha
+                    x = (6 - punto) * self.ancho_triangulo + self.ancho_triangulo // 2 \
+                        + self.ancho_barra // 2 + (7 * self.ancho_triangulo)
                 else:
-                    # Triángulos de la izquierda del jugador negro
-                    x = (12 - punto) * self.ancho_triangulo + self.ancho_triangulo // 2 + self.ancho_barra // 2
-                y_base = self.alto - self.radio_ficha
-                step = -self.radio_ficha * 2
-
-            else:  # parte superior (13 a 24)
-                if punto <= 18:
-                    # Triángulos de la izquierda del jugador blanco
-                    x = (punto - 13) * self.ancho_triangulo + self.ancho_triangulo // 2 + self.ancho_barra // 2
-                else:
-                    # Triángulos de la derecha del jugador blanco
-                    x = (punto - 19) * self.ancho_triangulo + self.ancho_triangulo // 2 + self.ancho_barra // 2 + (7 * self.ancho_triangulo)
+                    # Triángulos de la izquierda
+                    x = (12 - punto) * self.ancho_triangulo + self.ancho_triangulo // 2 \
+                        + self.ancho_barra // 2
                 y_base = self.radio_ficha
                 step = self.radio_ficha * 2
 
-            # Dibujar las fichas en "torres"
+            # --- PARTE INFERIOR (13–24) ---
+            else:
+                # Los triángulos van de derecha a izquierda
+                if punto <= 18:
+                    # Triángulos de la izquierda (19–24)
+                    x = (punto - 13) * self.ancho_triangulo + self.ancho_triangulo // 2 \
+                        + self.ancho_barra // 2
+                else:
+                    # Triángulos de la derecha (13–18)
+                    x = (punto - 19) * self.ancho_triangulo + self.ancho_triangulo // 2 \
+                        + self.ancho_barra // 2 + (7 * self.ancho_triangulo)
+                y_base = self.alto - self.radio_ficha
+                step = -self.radio_ficha * 2
+
+            # Dibujar fichas en pila
             for i in range(cantidad):
                 y = y_base + step * i
                 pygame.draw.circle(self.pantalla, color, (x, y), self.radio_ficha)
