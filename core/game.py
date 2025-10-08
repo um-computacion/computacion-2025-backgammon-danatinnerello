@@ -3,7 +3,7 @@
 -Iniciar tablero,jugadores y dados
 -controlar turnos
 -verificar ganador 
--interactuar con el CLI o Pygame
+-interactuar con el CLI o Pygame                        
 
 '''
 from core.board import Tablero
@@ -15,13 +15,13 @@ from core.excepcions import (
 )
 
 class Juego:
-    def __init__(self,jugador1:Jugador,jugador2:Jugador,tablero:Tablero = None,dados: Dados =None):
+    def __init__(self,nombre_jugador1:Jugador,nombre_jugador2:Jugador,tablero:Tablero = None,dados: Dados =None):
         self.__tablero__ = tablero if tablero else Tablero()
-        self.__jugador1__ = jugador1
-        self.__jugador2__ = jugador2
+        self.__jugador1__ = nombre_jugador1
+        self.__jugador2__ = nombre_jugador2
         self.__jugadores__= [self.__jugador1__, self.__jugador2__]
         self.__dados__ = dados if dados else Dados()
-        self.__turno__ =jugador1
+        self.__turno__ =nombre_jugador1
         self.__juego_terminado__ = False
 
     def mostrar_jugador1(self):
