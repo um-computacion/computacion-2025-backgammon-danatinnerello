@@ -10,7 +10,7 @@ Responsabilidad:
 
 import pygame
 
-class Tablero:
+class TableroGrafico:
     def __init__(self,pantalla):
         self.pantalla = pantalla
         self.ancho= self.pantalla.get_width()
@@ -27,6 +27,9 @@ class Tablero:
         #Dibuja barras
         color_barra_central = (100, 70, 50)
         color_borde = (60, 40, 30)
+        color_fondo = (220, 190, 160) 
+        self.pantalla.fill(color_fondo)
+
 
         # Barra central
         x_barra = (self.ancho / 2) - (self.ancho_barra / 2)
@@ -80,13 +83,14 @@ class Tablero:
         pygame.draw.rect(self.pantalla,color_borde,
             pygame.Rect(self.ancho - self.ancho_barra // 2, 0, self.ancho_barra // 2, self.alto),2)
 
+
     def dibujar_fichas(self, estado: dict):
         """Dibuja las fichas en el tablero según el estado del juego con punto 1 arriba a la derecha"""
         for punto, datos in estado.items():
-            color = (255, 255, 255) if datos["color"] == "blanco" else (0, 0, 0)
+            color = (255, 255, 255) if datos["color"] == "Blanca" else (0, 0, 0)
             cantidad = datos["cantidad"]
 
-            # --- PARTE SUPERIOR (1–12) ---
+            # parte superior
             if punto <= 12:
                 # Los triángulos van de derecha a izquierda
                 if punto <= 6:
@@ -100,7 +104,7 @@ class Tablero:
                 y_base = self.radio_ficha
                 step = self.radio_ficha * 2
 
-            # --- PARTE INFERIOR (13–24) ---
+            # parte inferior
             else:
                 # Los triángulos van de derecha a izquierda
                 if punto <= 18:
@@ -119,3 +123,26 @@ class Tablero:
                 y = y_base + step * i
                 pygame.draw.circle(self.pantalla, color, (x, y), self.radio_ficha)
                 pygame.draw.circle(self.pantalla, (0, 0, 0), (x, y), self.radio_ficha, 2)
+
+
+
+def estado_desde_board(board):
+    """
+    Convierte el Tablero del core en un diccionario de estado visual
+    que puede usar el renderer de pygame.
+    """
+
+    estado = {}
+
+    # Asegurarnos de acceder a la lista interna de puntos
+    puntos = board.__contenedor__  # lista de 24 posiciones (0..23)
+
+    for i, pila in enumerate(puntos):
+        if not pila:
+            continue  # punto vacío
+        # Cada pila es una lista de fichas (objetos Ficha)
+        color = pila[0].capitalize()  # "Blanca" o "Negra"
+        cantidad = len(pila)
+        estado[i + 1] = {"color": color, "cantidad": cantidad}
+
+    return estado

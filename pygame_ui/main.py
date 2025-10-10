@@ -9,52 +9,36 @@ Responsabilidad:
 """
 
 import pygame
-from pygame_ui.board_renderer import Tablero
-
+from pygame_ui.board_renderer import TableroGrafico, estado_desde_board
+from core.board import Tablero
 
 def main():
-    # Inicializar pygame
     pygame.init()
+
     pantalla = pygame.display.set_mode((1000, 600))
-    pygame.display.set_caption("Backgammon - Pygame")
+    pygame.display.set_caption("Backgammon - Ludoteka Style")
 
-    reloj = pygame.time.Clock()
-    tablero = Tablero(pantalla)
+    tablero = Tablero()
+    renderer = TableroGrafico(pantalla)
+    estado = estado_desde_board(tablero)
 
-  
-    corriendo = True
-    while corriendo:
-        # Manejo de eventos
-        for evento in pygame.event.get():
-            if evento.type == pygame.QUIT:
-                corriendo = False
+    renderer.dibujar_tablero()
+    renderer.dibujar_fichas(estado)
+    clock = pygame.time.Clock()
 
-        # Fondo color madera
-        pantalla.fill((220, 190, 160))
+    #actualiza estado
+    pygame.display.flip()
 
-        # Dibujar tablero
-        tablero.dibujar_tablero()
-
-        # Estado inicial del backgammon
-        estado = {
-            24: {"color": "blanco", "cantidad": 2},
-            13: {"color": "blanco", "cantidad": 5},
-            8:  {"color": "blanco", "cantidad": 3},
-            6:  {"color": "blanco", "cantidad": 5},
-
-            1:  {"color": "negro", "cantidad": 2},
-            12: {"color": "negro", "cantidad": 5},
-            17: {"color": "negro", "cantidad": 3},
-            19: {"color": "negro", "cantidad": 5},
-        }
-
-        # Dibujar fichas
-        tablero.dibujar_fichas(estado)
-
-      
-        # Actualizar pantalla
-        pygame.display.flip()
-        reloj.tick(60)
+    # Bucle principal
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False  # salir del bucle con el botón de cerrar
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False  # salir también con tecla ESC
+        clock.tick(30)  # Limita a 30 FPS
 
     pygame.quit()
 
