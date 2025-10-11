@@ -162,25 +162,27 @@ class TableroGrafico:
         return punto
 
 
-
-
 def estado_desde_board(board):
     """
-    Convierte el Tablero del core en un diccionario de estado visual
-    que puede usar el renderer de pygame.
+    Convierte el estado del tablero del core en un formato entendible para el renderer.
+    Admite tanto objetos Ficha como strings ("Blanca"/"Negra").
     """
-
     estado = {}
-
-    # Asegurarnos de acceder a la lista interna de puntos
-    puntos = board.__contenedor__  # lista de 24 posiciones (0..23)
+    puntos = board.__contenedor__
 
     for i, pila in enumerate(puntos):
         if not pila:
-            continue  # punto vacío
-        # Cada pila es una lista de fichas (objetos Ficha)
-        color = pila[0].capitalize()  # "Blanca" o "Negra"
-        cantidad = len(pila)
-        estado[i + 1] = {"color": color, "cantidad": cantidad}
+            continue
+
+        ficha = pila[0]
+
+        # Si es un objeto Ficha, obtenemos su color
+        if hasattr(ficha, "obtener_color"):
+            color = ficha.obtener_color().capitalize()
+        else:
+            # Si es string, lo usamos directamente
+            color = str(ficha).capitalize()
+
+        estado[i + 1] = {"color": color, "cantidad": len(pila)}
 
     return estado
