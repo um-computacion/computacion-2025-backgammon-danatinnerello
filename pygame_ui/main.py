@@ -35,9 +35,12 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False  # salir del bucle con el botón de cerrar
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    running = False  # salir también con tecla ESC
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                punto = renderer.obtener_punto_desde_click(event.pos)
+                if punto:
+                    print(f"Hiciste clic en el punto {punto}")
         clock.tick(30)  # Limita a 30 FPS
 
     pygame.quit()
