@@ -21,7 +21,7 @@ class Juego:
         self.__jugador2__ = nombre_jugador2
         self.__jugadores__= [self.__jugador1__, self.__jugador2__]
         self.__dados__ = dados if dados else Dados()
-        self.__turno__ =nombre_jugador1
+        self.__turno__ = self.__jugador1__
         self.__juego_terminado__ = False
 
     def mostrar_jugador1(self):
