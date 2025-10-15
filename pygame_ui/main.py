@@ -10,30 +10,75 @@ Responsabilidad:
 
 import pygame
 from pygame_ui.board_renderer import TableroGrafico, estado_desde_board
-from core.player import Jugador
-from core.game import Juego
+from core.game import Juego, Jugador
+
 
 pygame.init()
+ANCHO_PANTALLA =1000
+ALTO_PANTALLA = 600
+FUENTE = pygame.font.Font(None, 24)
+COLOR_FONDO = (222, 184, 135)  # color madera
 
+def pantalla_pedir_nombres():
+    """Pantalla inicial para pedir los nombres de los jugadores"""
+    pantalla = pygame.display.set_mode((ANCHO_PANTALLA, ALTO_PANTALLA))
+    pygame.display.set_caption("Backgammon - Ingresar nombres")
 
-def pedir_nombres(pantalla):
-    fuente = pygame.font.Font(None, 48)
-    texto1 = fuente.render("Jugador 1 (Blancas):", True, (0, 0, 0))
-    texto2 = fuente.render("Jugador 2 (Negras):", True, (0, 0, 0))
-    pantalla.fill((240, 230, 200))
-    pantalla.blit(texto1, (250, 200))
-    pantalla.blit(texto2, (250, 300))
-    pygame.display.flip()
-    return "Jugador 1", "Jugador 2"
+    input_boxes = [
+        pygame.Rect(400, 250, 400, 50),  # Jugador 1
+        pygame.Rect(400, 350, 400, 50),  # Jugador 2
+    ]
+    nombres = ["", ""]
+    colores = [(255, 255, 255)] * 2
+    activo = [False, False]
+    texto_instruccion = FUENTE.render(
+        "Ingrese los nombres y presione ENTER para comenzar", True, (0, 0, 0)
+    )
 
+    clock = pygame.time.Clock()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return None, None
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                for i, box in enumerate(input_boxes):
+                    activo[i] = box.collidepoint(event.pos)
+                    colores[i] = (200, 200, 255) if activo[i] else (255, 255, 255)
+
+            if event.type == pygame.KEYDOWN:
+                for i in range(2):
+                    if activo[i]:
+                        if event.key == pygame.K_RETURN:
+                            if all(nombres):
+                                return nombres[0], nombres[1]
+                        elif event.key == pygame.K_BACKSPACE:
+                            nombres[i] = nombres[i][:-1]
+                        else:
+                            nombres[i] += event.unicode
+
+        pantalla.fill(COLOR_FONDO)
+        pantalla.blit(texto_instruccion, (280, 150))
+
+        for i, box in enumerate(input_boxes):
+            texto_label = FUENTE.render(
+                f"Jugador {i+1} ({'Blancas' if i == 0 else 'Negras'}):", True, (0, 0, 0)
+            )
+            pantalla.blit(texto_label, (200, 260 + i * 100))
+            pygame.draw.rect(pantalla, colores[i], box, 2)
+            texto_nombre = FUENTE.render(nombres[i], True, (0, 0, 0))
+            pantalla.blit(texto_nombre, (box.x + 10, box.y + 10))
+
+        pygame.display.flip()
+        clock.tick(30)
 
 def dibujar_dados(pantalla, valores, jugador_actual):
     """Muestra el turno actual y los valores de los dados en pantalla"""
     fuente = pygame.font.Font(None, 48)
     texto_turno = fuente.render(
-        f"Turno: {jugador_actual.obtener_nombre()} ({jugador_actual.obtener_color()})",
-        True,
-        (0, 0, 0),
+        f"Turno: {jugador_actual.obtener_nombre()} ({jugador_actual.obtener_color()})", True, (0, 0, 0)
     )
     pantalla.blit(texto_turno, (50, 15))
     if valores:
@@ -42,75 +87,68 @@ def dibujar_dados(pantalla, valores, jugador_actual):
 
 
 def main():
-    pantalla = pygame.display.set_mode((1000, 600))
-    pygame.display.set_caption("Backgammon - Pygame UI")
+    nombre1, nombre2 = pantalla_pedir_nombres()
+    if not nombre1 or not nombre2:
+        return
 
-    jugador1 = Jugador("Jugador 1", "Blanca")
-    jugador2 = Jugador("Jugador 2", "Negra")
+    jugador1 = Jugador(nombre1, "Blanca")
+    jugador2 = Jugador(nombre2, "Negra")
+
     juego = Juego(jugador1, jugador2)
+    tablero = juego.mostrar_tablero()
+    juego.__dados__.tirar_dados()
+    pantalla = pygame.display.set_mode((ANCHO_PANTALLA, ALTO_PANTALLA))
+    pygame.display.set_caption("Backgammon - Pygame")
 
     renderer = TableroGrafico(pantalla)
 
-    running = True
+    reloj = pygame.time.Clock()
     punto_origen = None
     dados_actuales = []
-    puede_mover = False
 
+    running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-            # Tira dados con el espacio
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE and not puede_mover:
-                    dados_actuales = juego.__dados__.tirar_dados()
-                    puede_mover = True
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                punto = renderer.obtener_punto_desde_click((x, y))
 
-            # Clic del mouse
-            elif event.type == pygame.MOUSEBUTTONDOWN and puede_mover:
-                pos = pygame.mouse.get_pos()
-                punto = renderer.obtener_punto_desde_click(pos)
+
                 if punto is not None:
-                    print(f"Seleccionaste el punto {punto}")
-
                     if punto_origen is None:
                         punto_origen = punto
-                        print(f"Origen seleccionado: {punto_origen}")
                     else:
                         punto_destino = punto
-                        print(f"Destino seleccionado: {punto_destino}")
-
                         jugador = juego.mostrar_turno()
 
                         try:
-                            print(f"Intentando mover de {punto_origen} a {punto_destino} ({jugador.obtener_color()})")
-                            captura = juego.valida_mover_ficha(jugador, punto_origen, punto_destino)
-
-                            if captura:
-                                print("Capturaste una ficha enemiga")
-                            else:
-                                print("Movimiento valido")
-
-                            # Si ya no quedan tiradas,pasa el turno
+                            juego.valida_mover_ficha(jugador, punto_origen, punto_destino)
+                            juego.__tablero__.mover_ficha(jugador, punto_origen, punto_destino)
                             if not juego.__dados__.obtener_tiradas_restantes():
-                                puede_mover = False
-
+                                juego.controlar_turnos()
+                                juego.__dados__.tirar_dados()
                         except Exception as e:
-                            print("Movimiento invalido:", e)
+                            print(f"Movimiento inválido: {e}")
 
-                        # limpiar origen para el proximo movimiento
                         punto_origen = None
 
-        # redibuja pantalla
-        pantalla.fill((240, 230, 200))
+        #Dibuja del tablero
+        pantalla.fill(COLOR_FONDO)
         renderer.dibujar_tablero()
-        renderer.dibujar_fichas(estado_desde_board(juego.mostrar_tablero()))
-        dibujar_dados(pantalla, dados_actuales, juego.mostrar_turno())
+        estado = estado_desde_board(tablero)
+        renderer.dibujar_fichas(estado)
+
+     
+
+        dibujar_dados(pantalla, juego.__dados__.obtener_tiradas_restantes(), juego.mostrar_turno())
+
         pygame.display.flip()
+        reloj.tick(30)
 
     pygame.quit()
-
 
 if __name__ == "__main__":
     main()
