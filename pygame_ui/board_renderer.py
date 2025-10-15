@@ -44,7 +44,7 @@ class TableroGrafico:
             puntos = [(x, 0),
                     (x + self.ancho_triangulo, 0),
                     (x + self.ancho_triangulo // 2, self.alto_triangulo)]
-            pygame.draw.polygon(self.pantalla, colores[i % 2], puntos)
+            pygame.draw.polygon(self.pantalla, colores[(i + 1) % 2], puntos)
 
         #Parte superior derecha(6 triangulos)
         for i in range(6):
@@ -52,7 +52,7 @@ class TableroGrafico:
             puntos = [(x, 0),
                     (x + self.ancho_triangulo, 0),
                     (x + self.ancho_triangulo // 2, self.alto_triangulo)]
-            pygame.draw.polygon(self.pantalla, colores[i % 2], puntos)
+            pygame.draw.polygon(self.pantalla, colores[(i+1) % 2], puntos)
 
         #Parte inferior izquierda(6 triangulos)
         for i in range(6):
@@ -112,7 +112,7 @@ class TableroGrafico:
                     x = (punto - 13) * self.ancho_triangulo + self.ancho_triangulo // 2 \
                         + self.ancho_barra // 2
                 else:
-                    # Triángulos de la derecha (13–18)
+                    # Triángulos de la derecha(13–18)
                     x = (punto - 19) * self.ancho_triangulo + self.ancho_triangulo // 2 \
                         + self.ancho_barra // 2 + (7 * self.ancho_triangulo)
                 y_base = self.alto - self.radio_ficha
