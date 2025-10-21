@@ -85,7 +85,6 @@ def dibujar_dados(pantalla, valores, jugador_actual):
         texto_dados = fuente.render(f"Dados: {valores}", True, (0, 0, 0))
         pantalla.blit(texto_dados, (600, 15))
 
-
 def main():
     nombre1, nombre2 = pantalla_pedir_nombres()
     if not nombre1 or not nombre2:
@@ -111,11 +110,13 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    if not juego.__dados__.obtener_tiradas_restantes():
+                        juego.__dados__.tirar_dados()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
                 punto = renderer.obtener_punto_desde_click((x, y))
-
 
                 if punto is not None:
                     if punto_origen is None:
@@ -126,22 +127,29 @@ def main():
 
                         try:
                             juego.valida_mover_ficha(jugador, punto_origen, punto_destino)
-                            juego.__tablero__.mover_ficha(jugador, punto_origen, punto_destino)
+                            # Si ya no quedan tiradas, tiramos dados para el siguiente jugador
                             if not juego.__dados__.obtener_tiradas_restantes():
-                                juego.controlar_turnos()
+                                print("Cambiando turno...")
                                 juego.__dados__.tirar_dados()
+                                tablero = juego.mostrar_tablero()  # actualiza referencia
+                                pantalla.fill(COLOR_FONDO)
+                                renderer.dibujar_tablero()
+                                estado = estado_desde_board(juego.mostrar_tablero())
+                                renderer.dibujar_fichas(estado)
+                                dibujar_dados(pantalla, juego.__dados__.obtener_tiradas_restantes(), juego.mostrar_turno())
+                                pygame.display.flip()
+
                         except Exception as e:
                             print(f"Movimiento inválido: {e}")
 
                         punto_origen = None
 
-        #Dibuja del tablero
+
+        # Dibuja tablero
         pantalla.fill(COLOR_FONDO)
         renderer.dibujar_tablero()
-        estado = estado_desde_board(tablero)
+        estado = estado_desde_board(juego.mostrar_tablero())
         renderer.dibujar_fichas(estado)
-
-     
 
         dibujar_dados(pantalla, juego.__dados__.obtener_tiradas_restantes(), juego.mostrar_turno())
 
