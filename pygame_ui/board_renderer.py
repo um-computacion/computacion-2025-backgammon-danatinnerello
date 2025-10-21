@@ -160,6 +160,16 @@ class TableroGrafico:
             punto = 13 + indice
 
         return punto
+    
+    def dibujar_barra(self, tablero):
+        barra = tablero.mostrar_barra()
+        for color, fichas in barra.items():
+            for i, ficha in enumerate(fichas):
+                y = self.alto // 2 + (i * (self.radio_ficha * 2)) - 30
+                x = self.ancho // 2
+                color_rgb = (255, 255, 255) if color == "Blanca" else (0, 0, 0)
+                pygame.draw.circle(self.pantalla, color_rgb, (x, y), self.radio_ficha)
+                pygame.draw.circle(self.pantalla, (0, 0, 0), (x, y), self.radio_ficha, 2)
 
 
 def estado_desde_board(board):
