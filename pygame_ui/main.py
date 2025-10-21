@@ -88,6 +88,21 @@ def dibujar_panel_inferior(pantalla, juego, mensaje=""):
     )
     pantalla.blit(turno_texto, (30, ALTO_TABLERO + 20))
     pantalla.blit(dados_texto, (400, ALTO_TABLERO + 20))
+        # Mostrar fichas en barra y afuera
+    barra = juego.mostrar_tablero().mostrar_barra()
+    afuera = juego.mostrar_tablero().mostrar_afuera()
+
+    texto_barra = FUENTE.render(
+        f"Barra → Blancas: {len(barra['Blanca'])} | Negras: {len(barra['Negra'])}",
+        True, (255, 255, 255)
+    )
+    texto_afuera = FUENTE.render(
+        f"Afuera → Blancas: {len(afuera['Blanca'])} | Negras: {len(afuera['Negra'])}",
+        True, (255, 255, 255)
+    )
+    pantalla.blit(texto_barra, (600, ALTO_TABLERO + 20))
+    pantalla.blit(texto_afuera, (600, ALTO_TABLERO + 50))
+
 
     if mensaje:
         mensaje_texto = FUENTE.render(mensaje, True, (255, 255, 0))
@@ -146,18 +161,25 @@ def main():
                             punto_destino = punto
                             jugador = juego.mostrar_turno()
                             try:
-                                juego.valida_mover_ficha(jugador, punto_origen, punto_destino)
-                                mensaje = "Movimiento válido"
-                                tiempo_mensaje = 1500
+                                captura = juego.valida_mover_ficha(jugador, punto_origen, punto_destino)
+                                if captura:
+                                    mensaje = "Capturaste una ficha enemiga"
+                                else:
+                                    mensaje = "Movimiento válido"
+
+                                # revisar ganador
                                 ganador = juego.verificar_ganador()
                                 if ganador:
                                     mensaje = f"¡Ganó {ganador.obtener_nombre()}!"
-                                    tiempo_mensaje = 999999  # mostrar hasta cerrar
+                                    tiempo_mensaje = 999999
                                     running = False
+
                             except Exception as e:
                                 mensaje = f"Movimiento inválido: {e}"
                                 tiempo_mensaje = 2000
+
                             punto_origen = None
+                            tiempo_mensaje = 1500
 
         # Si no hay tiradas disponibles y no hay mensaje activo, mostrar el de ENTER
         if not juego.__dados__.obtener_tiradas_restantes() and not mensaje:
@@ -176,6 +198,8 @@ def dibujar_todo(pantalla, renderer, juego, mensaje=""):
     estado = estado_desde_board(juego.mostrar_tablero())
     renderer.dibujar_fichas(estado)
     dibujar_panel_inferior(pantalla, juego, mensaje)
+    renderer.dibujar_barra(juego.mostrar_tablero())
+
 
 if __name__ == "__main__":
     main()
