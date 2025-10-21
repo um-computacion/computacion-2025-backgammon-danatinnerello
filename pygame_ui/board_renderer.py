@@ -11,14 +11,14 @@ Responsabilidad:
 import pygame
 
 class TableroGrafico:
-    def __init__(self,pantalla):
+    def __init__(self, pantalla, alto_tablero=None):
         self.pantalla = pantalla
-        self.ancho= self.pantalla.get_width()
-        self.alto= self.pantalla.get_height()
+        self.ancho = self.pantalla.get_width()
+        self.alto = alto_tablero if alto_tablero else self.pantalla.get_height()
         self.ancho_triangulo = self.ancho // 14
-        self.ancho_barra = self.ancho_triangulo  # barra central del mismo ancho que un triangulo
-        self.alto_triangulo= self.alto // 2
-        self.radio_ficha = self.ancho_triangulo // 3  # tamaño de la ficha
+        self.ancho_barra = self.ancho_triangulo
+        self.alto_triangulo = self.alto // 2
+        self.radio_ficha = self.ancho_triangulo // 3
 
     def dibujar_tablero(self):
         # Colores de los triangulos
