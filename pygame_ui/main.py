@@ -73,6 +73,7 @@ def pantalla_pedir_nombres():
         pygame.display.flip()
         clock.tick(30)
 
+
 def dibujar_panel_inferior(pantalla, juego, mensaje=""):
     rect_panel = pygame.Rect(0, ALTO_TABLERO, ANCHO_PANTALLA, ALTO_PANEL)
     pygame.draw.rect(pantalla, COLOR_PANEL, rect_panel)
@@ -88,7 +89,7 @@ def dibujar_panel_inferior(pantalla, juego, mensaje=""):
     )
     pantalla.blit(turno_texto, (30, ALTO_TABLERO + 20))
     pantalla.blit(dados_texto, (400, ALTO_TABLERO + 20))
-        # Mostrar fichas en barra y afuera
+
     barra = juego.mostrar_tablero().mostrar_barra()
     afuera = juego.mostrar_tablero().mostrar_afuera()
 
@@ -103,10 +104,10 @@ def dibujar_panel_inferior(pantalla, juego, mensaje=""):
     pantalla.blit(texto_barra, (600, ALTO_TABLERO + 20))
     pantalla.blit(texto_afuera, (600, ALTO_TABLERO + 50))
 
-
     if mensaje:
         mensaje_texto = FUENTE.render(mensaje, True, (255, 255, 0))
         pantalla.blit(mensaje_texto, (30, ALTO_TABLERO + 60))
+
 
 def main():
     nombre1, nombre2 = pantalla_pedir_nombres()
@@ -125,11 +126,12 @@ def main():
     reloj = pygame.time.Clock()
     punto_origen = None
     mensaje = ""
-    tiempo_mensaje = 0 #duracin restante del mensaje en milisegundos
+    tiempo_mensaje = 0
+    esperar_paso_turno = 0  # nuevo temporizador para pausa visual
 
     running = True
     while running:
-        dt = reloj.tick(30)  #tiempo entre frames (ms)
+        dt = reloj.tick(30)
         if tiempo_mensaje > 0:
             tiempo_mensaje -= dt
             if tiempo_mensaje <= 0:
@@ -139,7 +141,6 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-            # ENTER = tirar dados solo si no hay tiradas
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 if not juego.__dados__.obtener_tiradas_restantes():
                     juego.__dados__.tirar_dados()
@@ -149,23 +150,46 @@ def main():
                     mensaje = "Ya tiene tiradas disponibles"
                     tiempo_mensaje = 1500
 
-            # Clicks en tablero para mover
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN and esperar_paso_turno == 0:
                 x, y = event.pos
                 if y < ALTO_TABLERO:
                     punto = renderer.obtener_punto_desde_click((x, y))
                     if punto is not None:
-                        if punto_origen is None:
-                            punto_origen = punto
-                        else:
-                            punto_destino = punto
-                            jugador = juego.mostrar_turno()
-                            try:
+                        jugador = juego.mostrar_turno()
+                        color = jugador.obtener_color()
+                        barra = juego.mostrar_tablero().mostrar_barra()
+
+                        try:
+                            # Si el jugador tiene fichas en la barra → debe sacarlas primero
+                            if barra[color]:
+                                dado_usado = None
+                                for dado in juego.__dados__.obtener_tiradas_restantes():
+                                    destino = 24 - dado if color == "Blanca" else dado - 1
+                                    if juego.mostrar_tablero().valida_mover_desde_barra(color, destino):
+                                        dado_usado = dado
+                                        break
+                                if dado_usado is None:
+                                    mensaje = "No hay movimientos válidos para salir de la barra"
+                                    tiempo_mensaje = 2000
+                                else:
+                                    juego.valida_mover_desde_barra(jugador, dado_usado)
+                                    mensaje = "Sacaste una ficha de la barra"
+                                    tiempo_mensaje = 1500
+                                punto_origen = None
+                                continue
+
+                            # Movimiento normal
+                            if punto_origen is None:
+                                punto_origen = punto
+                            else:
+                                punto_destino = punto
                                 captura = juego.valida_mover_ficha(jugador, punto_origen, punto_destino)
                                 if captura:
                                     mensaje = "Capturaste una ficha enemiga"
                                 else:
                                     mensaje = "Movimiento válido"
+                                punto_origen = None
+                                tiempo_mensaje = 1500
 
                                 # revisar ganador
                                 ganador = juego.verificar_ganador()
@@ -174,17 +198,31 @@ def main():
                                     tiempo_mensaje = 999999
                                     running = False
 
-                            except Exception as e:
-                                mensaje = f"Movimiento inválido: {e}"
-                                tiempo_mensaje = 2000
-
+                        except Exception as e:
+                            mensaje = f"Movimiento inválido: {e}"
+                            tiempo_mensaje = 2000
                             punto_origen = None
-                            tiempo_mensaje = 1500
 
-        # Si no hay tiradas disponibles y no hay mensaje activo, mostrar el de ENTER
-        if not juego.__dados__.obtener_tiradas_restantes() and not mensaje:
+        # Si no hay movimientos posibles → mostrar mensaje y preparar cambio de turno
+        # NOTE: sólo pasar el turno automáticamente si HAY tiradas disponibles y AUN ASÍ no hay movimientos
+        tiradas_actuales = juego.__dados__.obtener_tiradas_restantes()
+        if esperar_paso_turno == 0 and tiradas_actuales and not juego.hay_movimientos_posibles(juego.mostrar_turno()):
+            mensaje = "No hay movimientos posibles. Se pasa el turno."
+            tiempo_mensaje = 2000
+            esperar_paso_turno = 2000  # esperar 2 segundos antes de cambiar
+
+        # Contador para la pausa antes del cambio de turno
+        if esperar_paso_turno > 0:
+            esperar_paso_turno -= dt
+            if esperar_paso_turno <= 0:
+                juego.controlar_turnos()
+                juego.__dados__.tirar_dados()
+                mensaje = f"Turno de {juego.mostrar_turno().obtener_nombre()}"
+                tiempo_mensaje = 1500
+
+        if not juego.__dados__.obtener_tiradas_restantes() and not mensaje and esperar_paso_turno == 0:
             mensaje = "Presione ENTER para tirar los dados"
-            tiempo_mensaje = 999999  # persistente hasta tirar
+            tiempo_mensaje = 999999
 
         dibujar_todo(pantalla, renderer, juego, mensaje)
         pygame.display.flip()
