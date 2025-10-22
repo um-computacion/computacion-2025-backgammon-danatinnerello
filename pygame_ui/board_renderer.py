@@ -162,15 +162,26 @@ class TableroGrafico:
         return punto
     
     def dibujar_barra(self, tablero):
+        """Dibuja las fichas en la barra central"""
         barra = tablero.mostrar_barra()
-        for color, fichas in barra.items():
-            for i, ficha in enumerate(fichas):
-                y = self.alto // 2 + (i * (self.radio_ficha * 2)) - 30
-                x = self.ancho // 2
-                color_rgb = (255, 255, 255) if color == "Blanca" else (0, 0, 0)
-                pygame.draw.circle(self.pantalla, color_rgb, (x, y), self.radio_ficha)
-                pygame.draw.circle(self.pantalla, (0, 0, 0), (x, y), self.radio_ficha, 2)
+        x_centro = self.ancho // 2
+        offset = self.radio_ficha * 2
 
+        for color, fichas in barra.items():
+            for i, _ in enumerate(fichas):
+                color_rgb = (255, 255, 255) if color == "Blanca" else (0, 0, 0)
+                # Posición separada para Blancas (arriba) y Negras (abajo)
+                if color == "Blanca":
+                    y = (self.alto // 2) - ((i + 1) * offset)
+                else:
+                    y = (self.alto // 2) + (i * offset) + offset
+                pygame.draw.circle(self.pantalla, color_rgb, (x_centro, y), self.radio_ficha)
+                pygame.draw.circle(self.pantalla, (0, 0, 0), (x_centro, y), self.radio_ficha, 2)
+
+            # Si hay más de 3, muestra número
+            if len(fichas) > 3:
+                texto = pygame.font.Font(None, 28).render(str(len(fichas)), True, (255, 0, 0))
+                self.pantalla.blit(texto, (x_centro - 8, (self.alto // 2) + (40 if color == "Negra" else -60)))
 
 def estado_desde_board(board):
     """
