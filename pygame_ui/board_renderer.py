@@ -83,22 +83,21 @@ class TableroGrafico:
         pygame.draw.rect(self.pantalla,color_borde,
             pygame.Rect(self.ancho - self.ancho_barra // 2, 0, self.ancho_barra // 2, self.alto),2)
 
-
     def dibujar_fichas(self, estado: dict):
         """Dibuja las fichas en el tablero según el estado del juego con punto 1 arriba a la derecha"""
+        fuente = pygame.font.Font(None, 24)
+        max_visibles = 5  # solo se muestran hasta 5 fichas por punto
+
         for punto, datos in estado.items():
             color = (255, 255, 255) if datos["color"] == "Blanca" else (0, 0, 0)
             cantidad = datos["cantidad"]
 
             # parte superior
             if punto <= 12:
-                # Los triángulos van de derecha a izquierda
                 if punto <= 6:
-                    # Triángulos de la derecha
                     x = (6 - punto) * self.ancho_triangulo + self.ancho_triangulo // 2 \
                         + self.ancho_barra // 2 + (7 * self.ancho_triangulo)
                 else:
-                    # Triángulos de la izquierda
                     x = (12 - punto) * self.ancho_triangulo + self.ancho_triangulo // 2 \
                         + self.ancho_barra // 2
                 y_base = self.radio_ficha
@@ -106,23 +105,32 @@ class TableroGrafico:
 
             # parte inferior
             else:
-                # Los triángulos van de derecha a izquierda
                 if punto <= 18:
-                    # Triángulos de la izquierda (19–24)
                     x = (punto - 13) * self.ancho_triangulo + self.ancho_triangulo // 2 \
                         + self.ancho_barra // 2
                 else:
-                    # Triángulos de la derecha(13–18)
                     x = (punto - 19) * self.ancho_triangulo + self.ancho_triangulo // 2 \
                         + self.ancho_barra // 2 + (7 * self.ancho_triangulo)
                 y_base = self.alto - self.radio_ficha
                 step = -self.radio_ficha * 2
 
-            # Dibujar fichas en pila
-            for i in range(cantidad):
+            # Dibujar fichas visibles (máximo 5)
+            visibles = min(cantidad, max_visibles)
+            for i in range(visibles):
                 y = y_base + step * i
                 pygame.draw.circle(self.pantalla, color, (x, y), self.radio_ficha)
                 pygame.draw.circle(self.pantalla, (0, 0, 0), (x, y), self.radio_ficha, 2)
+
+            # Si hay más fichas, mostrar número dentro de la última ficha visible
+            if cantidad > max_visibles:
+                restantes = cantidad - max_visibles
+                # coordenada de la última ficha visible
+                y = y_base + step * (visibles - 1)
+                # color del número (contraste con la ficha)
+                color_texto = (0, 0, 0) if color == (255, 255, 255) else (255, 255, 255)
+                texto = fuente.render(f"+{restantes}", True, color_texto)
+                rect = texto.get_rect(center=(x, y))
+                self.pantalla.blit(texto, rect)
 
     def obtener_punto_desde_click(self, pos):
         """
