@@ -191,6 +191,16 @@ class TableroGrafico:
                 texto = pygame.font.Font(None, 28).render(str(len(fichas)), True, (255, 0, 0))
                 self.pantalla.blit(texto, (x_centro - 8, (self.alto // 2) + (40 if color == "Negra" else -60)))
 
+    def obtener_barra_lateral_desde_click(self, pos):
+        """Devuelve 'izquierda' o 'derecha' si se clickeó en la barra lateral correspondiente, sino None."""
+        x, y = pos
+        if x < self.ancho_barra // 2:
+            return "izquierda"
+        elif x > self.ancho - self.ancho_barra // 2:
+            return "derecha"
+        return None
+
+
 def estado_desde_board(board):
     """
     Convierte el estado del tablero del core en un formato entendible para el renderer.
