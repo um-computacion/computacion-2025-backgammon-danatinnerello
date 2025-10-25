@@ -21,6 +21,7 @@ FUENTE = pygame.font.Font(None, 28)
 COLOR_FONDO = (222, 184, 135)
 COLOR_PANEL = (160, 110, 60)
 
+
 def pantalla_pedir_nombres():
     pantalla = pygame.display.set_mode((ANCHO_PANTALLA, ALTO_PANTALLA))
     pygame.display.set_caption("Backgammon - Ingresar nombres")
@@ -109,6 +110,13 @@ def dibujar_panel_inferior(pantalla, juego, mensaje=""):
         pantalla.blit(mensaje_texto, (30, ALTO_TABLERO + 60))
 
 
+def pasar_turno(juego):
+    """Cambia el turno y tira los dados de forma segura."""
+    juego.controlar_turnos()
+    juego.__dados__.tirar_dados()
+    return f"Turno de {juego.mostrar_turno().obtener_nombre()}"
+
+
 def main():
     nombre1, nombre2 = pantalla_pedir_nombres()
     if not nombre1 or not nombre2:
@@ -127,7 +135,7 @@ def main():
     punto_origen = None
     mensaje = ""
     tiempo_mensaje = 0
-    esperar_paso_turno = 0  # nuevo temporizador para pausa visual
+    esperar_paso_turno = 0
 
     running = True
     while running:
@@ -152,33 +160,87 @@ def main():
 
             if event.type == pygame.MOUSEBUTTONDOWN and esperar_paso_turno == 0:
                 x, y = event.pos
+                jugador = juego.mostrar_turno()
+                color = jugador.obtener_color()
+                barra = juego.mostrar_tablero().mostrar_barra()
+
+                # --- Intentar sacar ficha (clic en barra lateral) ---
+                barra_lateral = renderer.obtener_barra_lateral_desde_click((x, y)) \
+                    if hasattr(renderer, "obtener_barra_lateral_desde_click") else None
+                if barra_lateral:
+                    # Verificar que todas las fichas estén en el último cuadrante
+                    if not juego.mostrar_tablero().todas_en_ultimo_cuadrante(color):
+                        mensaje = "No se pueden sacar fichas: aún hay fichas fuera del último cuadrante."
+                        tiempo_mensaje = 2000
+                    else:
+                        contenedor = juego.mostrar_tablero().mostrar_contenedor()
+
+                        # Determinar qué puntos son válidos para sacar según el color
+                        if color == "Blanca" and barra_lateral == "derecha":
+                            posibles = [i for i in range(6) if contenedor[i]]
+                        elif color == "Negra" and barra_lateral == "izquierda":
+                            posibles = [i for i in range(18, 24) if contenedor[i]]
+                        else:
+                            posibles = []
+
+                        if not posibles:
+                            mensaje = "No hay fichas disponibles para sacar desde ese lado."
+                            tiempo_mensaje = 2000
+                        else:
+                            try:
+                                desde = posibles[-1] + 1
+                                juego.valida_sacar_ficha(jugador, desde)
+                                mensaje = f"Sacaste una ficha ({color})"
+                                tiempo_mensaje = 1500
+
+                                ganador = juego.verificar_ganador()
+                                if ganador:
+                                    mensaje = f"¡Ganó {ganador.obtener_nombre()}!"
+                                    tiempo_mensaje = 999999
+                                    running = False
+
+                            except Exception as e:
+                                mensaje = str(e)
+                                tiempo_mensaje = 2000
+
+                    punto_origen = None
+                    continue
+
+                # --- Movimiento normal / desde barra ---
                 if y < ALTO_TABLERO:
                     punto = renderer.obtener_punto_desde_click((x, y))
                     if punto is not None:
-                        jugador = juego.mostrar_turno()
-                        color = jugador.obtener_color()
-                        barra = juego.mostrar_tablero().mostrar_barra()
-
                         try:
                             # Si el jugador tiene fichas en la barra → debe sacarlas primero
                             if barra[color]:
-                                dado_usado = None
-                                for dado in juego.__dados__.obtener_tiradas_restantes():
+                                tiradas = juego.__dados__.obtener_tiradas_restantes()
+                                movimientos_validos = []
+
+                                for dado in tiradas:
                                     destino = 24 - dado if color == "Blanca" else dado - 1
                                     if juego.mostrar_tablero().valida_mover_desde_barra(color, destino):
-                                        dado_usado = dado
-                                        break
-                                if dado_usado is None:
-                                    mensaje = "No hay movimientos válidos para salir de la barra"
-                                    tiempo_mensaje = 2000
-                                else:
+                                        movimientos_validos.append((dado, destino))
+
+                                if not movimientos_validos:
+                                    mensaje = "No hay movimientos posibles desde la barra. Se pasa el turno."
+                                    tiempo_mensaje = 2500
+                                    punto_origen = None
+                                    esperar_paso_turno = 2500
+                                    continue
+
+                                dado_usado, destino = movimientos_validos[0]
+                                try:
                                     juego.valida_mover_desde_barra(jugador, dado_usado)
-                                    mensaje = "Sacaste una ficha de la barra"
+                                    mensaje = f"Sacaste una ficha de la barra con dado {dado_usado}"
                                     tiempo_mensaje = 1500
+                                except Exception as e:
+                                    mensaje = f"No se pudo mover desde la barra: {e}"
+                                    tiempo_mensaje = 2000
+
                                 punto_origen = None
                                 continue
 
-                            # Movimiento normal
+                            # Movimiento entre puntos
                             if punto_origen is None:
                                 punto_origen = punto
                             else:
@@ -191,7 +253,6 @@ def main():
                                 punto_origen = None
                                 tiempo_mensaje = 1500
 
-                                # revisar ganador
                                 ganador = juego.verificar_ganador()
                                 if ganador:
                                     mensaje = f"¡Ganó {ganador.obtener_nombre()}!"
@@ -203,22 +264,28 @@ def main():
                             tiempo_mensaje = 2000
                             punto_origen = None
 
-        # Si no hay movimientos posibles → mostrar mensaje y preparar cambio de turno
-        # NOTE: sólo pasar el turno automáticamente si HAY tiradas disponibles y AUN ASÍ no hay movimientos
+        # --- Detectar que no hay movimientos posibles ---
         tiradas_actuales = juego.__dados__.obtener_tiradas_restantes()
         if esperar_paso_turno == 0 and tiradas_actuales and not juego.hay_movimientos_posibles(juego.mostrar_turno()):
             mensaje = "No hay movimientos posibles. Se pasa el turno."
             tiempo_mensaje = 2000
-            esperar_paso_turno = 2000  # esperar 2 segundos antes de cambiar
+            punto_origen = None
+            esperar_paso_turno = 2000
 
-        # Contador para la pausa antes del cambio de turno
+        # --- Esperar y pasar turno correctamente ---
         if esperar_paso_turno > 0:
             esperar_paso_turno -= dt
             if esperar_paso_turno <= 0:
-                juego.controlar_turnos()
-                juego.__dados__.tirar_dados()
-                mensaje = f"Turno de {juego.mostrar_turno().obtener_nombre()}"
-                tiempo_mensaje = 1500
+                punto_origen = None
+                mensaje = pasar_turno(juego)
+                tiempo_mensaje = 2000
+                esperar_paso_turno = 0
+
+                # 🔁 Nuevo chequeo automático: si el nuevo jugador tampoco puede mover, volver a pasar turno
+                if not juego.hay_movimientos_posibles(juego.mostrar_turno()):
+                    mensaje = "Ningún movimiento posible. Se vuelve a pasar el turno."
+                    tiempo_mensaje = 2000
+                    esperar_paso_turno = 2000
 
         if not juego.__dados__.obtener_tiradas_restantes() and not mensaje and esperar_paso_turno == 0:
             mensaje = "Presione ENTER para tirar los dados"
@@ -241,3 +308,18 @@ def dibujar_todo(pantalla, renderer, juego, mensaje=""):
 
 if __name__ == "__main__":
     main()
+
+
+#me falta:
+#terminar de arreglar que as fichas entren a las barras laterales y que muestre correctamnete los mensjaes 
+#despues ver si me falta algo comparado con el cli
+#añadir validaciones
+#ver si tengo que hacer test
+#completar documentacionn
+#separra los events
+#pulir detalles
+
+
+#acomodar que la ficha de la barra salga solo si se toca esa ficha y no otra
+#arreglar que te deje elegir el dado con el que queres sacar la fcha de la barra(ahora como que lo hace aleatorio)
+#siguen sin poder entrar las fichas en la barra
