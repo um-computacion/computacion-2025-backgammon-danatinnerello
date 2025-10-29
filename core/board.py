@@ -123,10 +123,26 @@ class Tablero:
         return True
 
     def aplicar_movimiento_desde_barra(self, color, hacia):
-        ficha = self.__barra__[color].pop()
-        self.__contenedor__[hacia].append(ficha)
-        return True
+        # Sacar la ficha que va a reingresar de la barra
+        ficha_reingreso = self.__barra__[color].pop()
+        
+        destino = self.__contenedor__[hacia]
+        captura = False
+        
+        # Verificar y ejecutar la captura
+        # El color de la ficha enemiga es el opuesto al color de reingreso
+        color_enemigo = "Negra" if color == "Blanca" else "Blanca" 
+        
+        # Si hay exactamente 1 ficha enemiga en el destino
+        if len(destino) == 1 and destino[0] == color_enemigo:
+            self.enviar_a_barra(hacia) # <-- Llama a enviar_a_barra para capturar la ficha enemiga
+            captura = True
 
+        # Colocar la ficha de reingreso en el destino
+        destino.append(ficha_reingreso) 
+        
+        return captura
+    
     def sacar_ficha(self, color, desde):
         #Cuando todas las fichas están en el ultimo cuadrante del contendor, se pueden sacar
         if self.__contenedor__[desde] and self.__contenedor__[desde][-1] == color:

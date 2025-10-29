@@ -126,24 +126,26 @@ class TableroGrafico:
                 self.pantalla.blit(texto, (x_centro - 8, (self.alto // 2) + (40 if color == "Negra" else -60)))
 
     def dibujar_barra_lateral(self, tablero):
-        """Dibuja las fichas fuera del tablero (barra lateral derecha)."""
+        """Muestra solo la cantidad de fichas fuera (barra lateral derecha)."""
         afuera = tablero.mostrar_afuera()
-        fuente = pygame.font.Font(None, 26)
-        max_visibles = 3
-        espacio = self.radio_ficha * 2 + 6
-        x_base = self.ancho - self.ancho_barra // 2 - self.radio_ficha
+        fuente = pygame.font.Font(None, 36)
+        
+        # Coordenada base centrada en la barra lateral derecha
+        x_centro_barra = self.ancho - self.ancho_barra // 4
 
-        for color, fichas in afuera.items():
-            visibles = min(len(fichas), max_visibles)
-            color_rgb = (255, 255, 255) if color == "Blanca" else (0, 0, 0)
-            y = 40 if color == "Blanca" else self.alto - 40
-            for i in range(visibles):
-                x = x_base - i * espacio
-                pygame.draw.circle(self.pantalla, color_rgb, (x, y), self.radio_ficha)
-                pygame.draw.circle(self.pantalla, (0, 0, 0), (x, y), self.radio_ficha, 2)
-            if len(fichas) > max_visibles:
-                texto = fuente.render(f"+{len(fichas) - max_visibles}", True, (255, 0, 0))
-                self.pantalla.blit(texto, (x_base - visibles * espacio, y - 10))
+        # Blancas (arriba)
+        cantidad_blanca = len(afuera.get("Blanca", []))
+        texto_blanca = fuente.render(f"{cantidad_blanca}", True, (0, 0, 0))
+        texto_blanca_rect = texto_blanca.get_rect(center=(x_centro_barra, 40))
+        pygame.draw.rect(self.pantalla, (255, 255, 255), texto_blanca_rect.inflate(16, 10), border_radius=6)
+        self.pantalla.blit(texto_blanca, texto_blanca_rect)
+
+        # Negras (abajo)
+        cantidad_negra = len(afuera.get("Negra", []))
+        texto_negra = fuente.render(f"{cantidad_negra}", True, (255, 255, 255))
+        texto_negra_rect = texto_negra.get_rect(center=(x_centro_barra, self.alto - 40))
+        pygame.draw.rect(self.pantalla, (0, 0, 0), texto_negra_rect.inflate(16, 10), border_radius=6)
+        self.pantalla.blit(texto_negra, texto_negra_rect)
 
     def obtener_punto_desde_click(self, pos):
         x, y = pos
