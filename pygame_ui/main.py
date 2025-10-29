@@ -7,7 +7,6 @@ Responsabilidad:
 - Captura eventos (mouse, teclado) usando events.py.
 - Mantiene el loop de juego (update → draw → events).
 """
-
 import pygame
 from pygame_ui.board_renderer import TableroGrafico, estado_desde_board
 from core.game import Juego, Jugador
@@ -110,7 +109,6 @@ def pasar_turno(juego):
     return f"Turno de {juego.mostrar_turno().obtener_nombre()}"
 
 
-
 def obtener_color_de_ficha_repr(ficha):
     if ficha is None:
         return None
@@ -137,7 +135,7 @@ def main():
     jugador1 = Jugador(nombre1, "Blanca")
     jugador2 = Jugador(nombre2, "Negra")
     juego = Juego(jugador1, jugador2)
-    juego.__dados__.tirar_dados()
+    juego.__dados__.tirar_dados()  # primera tirada (inicia el juego)
 
     pantalla = pygame.display.set_mode((ANCHO_PANTALLA, ALTO_PANTALLA))
     pygame.display.set_caption("Backgammon - Pygame")
@@ -147,7 +145,6 @@ def main():
     punto_origen = None
     mensaje = ""
     tiempo_mensaje = 0
-    esperar_paso_turno = 0
     ganador = None
     ficha_barra_seleccionada = False
 
@@ -155,17 +152,18 @@ def main():
     while running:
         dt = reloj.tick(30)
 
-        if tiempo_mensaje > 0:
-            tiempo_mensaje -= dt
-            if tiempo_mensaje <= 0:
-                mensaje = ""
+        # Si no hay tiradas disponibles al inicio del loop -> tirar para el turno actual
+        if not juego.__dados__.obtener_tiradas_restantes():
+            juego.__dados__.tirar_dados()
+            mensaje = f"Turno de {juego.mostrar_turno().obtener_nombre()} ({juego.mostrar_turno().obtener_color()})"
+            tiempo_mensaje = 1200
 
         jugador = juego.mostrar_turno()
         color = jugador.obtener_color()
         barra = juego.mostrar_tablero().mostrar_barra()
         tiradas = juego.__dados__.obtener_tiradas_restantes()
 
-        #Si hay fichas en barra, verificar si existe al menos una tirada que permita reingresar
+        # Si el jugador tiene fichas en la barra y NO puede reingresar con ninguna tirada -> pasar turno
         if barra[color] and tiradas:
             puede_reingresar = False
             for dado in tiradas:
@@ -175,9 +173,14 @@ def main():
                     break
             if not puede_reingresar:
                 mensaje = "No hay movimientos válidos desde la barra. Se pasa el turno."
-                tiempo_mensaje = 1800
+                tiempo_mensaje = 1600
                 pasar_turno(juego)
                 continue
+
+        if tiempo_mensaje > 0:
+            tiempo_mensaje -= dt
+            if tiempo_mensaje <= 0:
+                mensaje = ""
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -192,34 +195,34 @@ def main():
                     mensaje = "Ya tiene tiradas disponibles"
                     tiempo_mensaje = 1500
 
-            if event.type == pygame.MOUSEBUTTONDOWN and esperar_paso_turno == 0 and not ganador:
+            if event.type == pygame.MOUSEBUTTONDOWN and not ganador:
                 x, y = event.pos
                 jugador = juego.mostrar_turno()
                 color = jugador.obtener_color()
                 barra = juego.mostrar_tablero().mostrar_barra()
 
-                #CLICK EN BARRA CENTRAL
+                # CLICK EN BARRA CENTRAL
                 centro_x = renderer.ancho // 2
                 if abs(x - centro_x) < renderer.ancho_barra:
                     if barra[color]:
                         ficha_barra_seleccionada = True
                         mensaje = "Ficha en barra seleccionada: elige punto destino para reingresar."
-                        tiempo_mensaje = 2000
+                        tiempo_mensaje = 1200
                         continue
 
-                #Si hay fichas en la barra del jugador, bloquear otros movimientos
+                # Si hay fichas en barra, bloquear otros movimientos
                 if barra[color] and not ficha_barra_seleccionada:
                     mensaje = "Debe reingresar ficha(s) de la barra antes de mover otras fichas."
-                    tiempo_mensaje = 1800
+                    tiempo_mensaje = 1200
                     continue
 
-                #Si se está reingresando desde la barra
+                # Si se está reingresando desde la barra
                 if ficha_barra_seleccionada:
                     ficha_barra_seleccionada = False
                     punto_destino = renderer.obtener_punto_desde_click((x, y))
                     if punto_destino is None:
                         mensaje = "Destino inválido para reingresar ficha."
-                        tiempo_mensaje = 1500
+                        tiempo_mensaje = 1400
                         continue
 
                     tablero_obj = juego.mostrar_tablero()
@@ -228,7 +231,7 @@ def main():
                     # Verificar bloqueo por 2+ fichas enemigas
                     if pila_dest and obtener_color_de_ficha_repr(pila_dest[0]) != color and len(pila_dest) >= 2:
                         mensaje = "No se puede reingresar: punto ocupado por 2+ fichas enemigas."
-                        tiempo_mensaje = 2000
+                        tiempo_mensaje = 1600
                         continue
 
                     # Buscar los dados que permitirían ese destino (sin consumirlos aún)
@@ -241,56 +244,17 @@ def main():
 
                     if not dados_validos:
                         mensaje = "No se puede reingresar en ese punto con las tiradas actuales."
-                        tiempo_mensaje = 2000
+                        tiempo_mensaje = 1600
                         continue
 
                     # Elegimos un dado (preferimos el menor — favorece exactos)
                     dado_elegido = min(dados_validos)
 
-                    # Antes de aplicar movimiento, registramos si en destino había exactamente 1 ficha enemiga
-                    habia_una_enemiga = False
-                    tipo_enemiga_repr = None
-                    if pila_dest and obtener_color_de_ficha_repr(pila_dest[0]) != color and len(pila_dest) == 1:
-                        habia_una_enemiga = True
-                        tipo_enemiga_repr = pila_dest[0]
-
                     try:
-                        # Aplicamos movimiento por el core — este método debe consumir la tirada y actualizar tablero/barra
                         juego.valida_mover_desde_barra(jugador, dado_elegido)
                         mensaje = f"Reingresaste ficha con dado {dado_elegido}"
-                        tiempo_mensaje = 1500
-
-                        contenedor_post = tablero_obj.mostrar_contenedor()
-                        pila_post = contenedor_post[punto_destino - 1]
+                        tiempo_mensaje = 1200
                         
-                        if habia_una_enemiga:
-                            
-                            if pila_post and obtener_color_de_ficha_repr(pila_post[0]) != color:
-                                # extraemos UNA ficha enemiga de la pila_post (buscamos primer elemento con color enemiga)
-                                idx = None
-                                for i, f in enumerate(pila_post):
-                                    if obtener_color_de_ficha_repr(f) != color:
-                                        idx = i
-                                        break
-                                if idx is not None:
-                                    pieza_enemiga = pila_post.pop(idx)
-                                    # colocar esa pieza en la barra correspondiente
-                                    barra_post = tablero_obj.mostrar_barra()
-                                    enemy_color = obtener_color_de_ficha_repr(pieza_enemiga)
-                                    # si la estructura de barra es lista por color
-                                    if enemy_color in barra_post:
-                                        barra_post[enemy_color].append(pieza_enemiga)
-                                    else:
-                                    
-                                        barra_post[enemy_color.capitalize()] = [pieza_enemiga]
-                                    # ahora aseguramos que en el punto exista la ficha del jugador
-                                    # si no está (por ejemplo core dejó sólo la enemiga y no puso player's),
-                                    # insertamos una representación simple
-                                    if not any(obtener_color_de_ficha_repr(x) == color for x in pila_post):
-                                        repr_ficha = crear_representacion_ficha(color, pila_post)
-                                        pila_post.insert(0, repr_ficha)
-          
-
                         ganador = juego.verificar_ganador()
                         if ganador:
                             mensaje = f"¡Ganó {ganador.obtener_nombre()}!"
@@ -298,33 +262,39 @@ def main():
 
                     except Exception as e:
                         mensaje = f"No se pudo reingresar: {e}"
-                        tiempo_mensaje = 2000
+                        tiempo_mensaje = 1800
+                    continue  # manejamos el siguiente evento
 
-                    continue  # pasamos al siguiente evento
-
-                #CLICK EN BARRA LATERAL
+                # CLICK EN BARRA LATERAL (sacar ficha)
                 barra_lateral = renderer.obtener_barra_lateral_desde_click((x, y))
                 if barra_lateral:
                     if punto_origen is None:
                         mensaje = "Seleccione la ficha (punto) que desea sacar y luego haga click en la barra lateral."
-                        tiempo_mensaje = 2200
+                        tiempo_mensaje = 1600
                         continue
                     try:
                         juego.valida_sacar_ficha(jugador, punto_origen)
                         mensaje = f"Sacaste una ficha desde {punto_origen}"
-                        tiempo_mensaje = 1500
+                        tiempo_mensaje = 1200
                         punto_origen = None
+                
+                        # Se fuerza el cambio de turno si el movimiento agotó los dados.
+                        if not juego.__dados__.obtener_tiradas_restantes():
+                            # pasar_turno() cambia el turno y tira nuevos dados
+                            mensaje = pasar_turno(juego) 
+                            tiempo_mensaje = 1200
+
                         ganador = juego.verificar_ganador()
                         if ganador:
                             mensaje = f"¡Ganó {ganador.obtener_nombre()}!"
                             tiempo_mensaje = 999999
                     except Exception as e:
                         mensaje = f"No se pudo sacar ficha: {e}"
-                        tiempo_mensaje = 2200
+                        tiempo_mensaje = 1800
                         punto_origen = None
                     continue
 
-                #movimiento normal
+                # MOVIMIENTO NORMAL
                 if y < ALTO_TABLERO:
                     punto = renderer.obtener_punto_desde_click((x, y))
                     if punto is not None:
@@ -342,43 +312,26 @@ def main():
                                 else:
                                     mensaje = "Movimiento válido"
                                 punto_origen = None
-                                tiempo_mensaje = 1500
-
+                                tiempo_mensaje = 1200
+                                
                                 ganador = juego.verificar_ganador()
                                 if ganador:
                                     mensaje = f"¡Ganó {ganador.obtener_nombre()}!"
                                     tiempo_mensaje = 999999
                         except Exception as e:
                             mensaje = f"Movimiento inválido: {e}"
-                            tiempo_mensaje = 2000
+                            tiempo_mensaje = 1600
                             punto_origen = None
 
-        #Si no hay movimientos posibles, pasar turno automáticamente
+        # Si no hay movimientos posibles, pasar turno automáticamente
         if not ganador and tiradas and not juego.hay_movimientos_posibles(juego.mostrar_turno()):
             mensaje = "No hay movimientos posibles. Se pasa el turno."
-            tiempo_mensaje = 2000
+            tiempo_mensaje = 1600
             pasar_turno(juego)
             continue
 
         dibujar_todo(pantalla, renderer, juego, mensaje)
         pygame.display.flip()
-
-        # ganador
-        if ganador:
-            pantalla.fill((0, 0, 0))
-            texto = FUENTE.render(
-                f"¡Ganó {ganador.obtener_nombre()} ({ganador.obtener_color()})!",
-                True,
-                (255, 215, 0),
-            )
-            pantalla.blit(
-                texto,
-                (
-                    ANCHO_PANTALLA // 2 - texto.get_width() // 2,
-                    ALTO_TABLERO // 2 - 20,
-                ),
-            )
-            pygame.display.flip()
 
     pygame.quit()
 
@@ -396,12 +349,9 @@ def dibujar_todo(pantalla, renderer, juego, mensaje=""):
 if __name__ == "__main__":
     main()
 
-
 #me falta:
-# arreglar que muestre bien las fichas y tirada de dados cuando ingresan a la barra lateral
 #despues ver si me falta algo comparado con el cli
 #añadir validaciones
-#ver si tengo que hacer test
 #completar documentacionn
 #separra los events
 #pulir detalles
