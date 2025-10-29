@@ -27,9 +27,14 @@ class Dados:
     def obtener_tiradas_restantes(self):
         return self.__tiradas_restantes__
 
-    def usar_tirada(self, valor): #controla si el valor esta en las tiradas restantes
+    def usar_tirada(self, valor, revertir=False): # Añadimos revertir=False
+        if revertir:
+            # Si se revierte, simplemente lo devolvemos a las tiradas restantes
+            self.__tiradas_restantes__.append(valor)
+            return True # Opcional: indicar que la reversión fue exitosa
+        
         if valor in self.__tiradas_restantes__:
-            self.__tiradas_restantes__.remove(valor) #elimina el valor usado
+            self.__tiradas_restantes__.remove(valor)
             return True
         return False
     
