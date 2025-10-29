@@ -173,6 +173,26 @@ class TestTablero(unittest.TestCase):
         self.assertIn("Barra", estado)
         self.assertIn("Afuera", estado)
 
+    def test_mover_ficha_color_incorrecto(self):
+        # Intenta mover la ficha que no es tuya (ej: Blanca intenta mover Negras en punto 1)
+        with self.assertRaisesRegex(MovimientoInvalidoError, "Esa ficha no te pertenece"):
+            self.tablero.mover_ficha("Blanca", 0, 1)
+
+    def test_mover_ficha_destino_bloqueado(self):
+        # Mover Negras de 0 a 2. Posición 2 tiene 2 Blancas (bloqueo).
+        self.tablero.mostrar_contenedor()[2] = ["Blanca", "Blanca"]
+        with self.assertRaises(ValueError):
+            self.tablero.mover_ficha("Negra", 0, 2)
+
+    def test_validar_movimiento_sentido_incorrecto(self):
+        # Blanca debe moverse hacia índice 0. Intenta moverse de 5 a 7 (hacia índice mayor).
+        tiradas = [2]
+        self.assertFalse(self.tablero.validar_movimiento("Blanca", 5, 7, tiradas))
+
+    def test_validar_movimiento_dado_no_disponible(self):
+        # Intenta mover 5 espacios, pero solo queda dado 1.
+        tiradas = [1]
+        self.assertFalse(self.tablero.validar_movimiento("Negra", 0, 5, tiradas))
     
 
 

@@ -129,19 +129,18 @@ class Tablero:
         destino = self.__contenedor__[hacia]
         captura = False
         
-        # Verificar y ejecutar la captura
-        # El color de la ficha enemiga es el opuesto al color de reingreso
+        # Verificar y ejecutar la captura (Regla de Backgammon)
         color_enemigo = "Negra" if color == "Blanca" else "Blanca" 
         
-        # Si hay exactamente 1 ficha enemiga en el destino
+        # Si hay exactamente 1 ficha enemiga en el destino (blot)
         if len(destino) == 1 and destino[0] == color_enemigo:
-            self.enviar_a_barra(hacia) # <-- Llama a enviar_a_barra para capturar la ficha enemiga
+            self.enviar_a_barra(hacia) # <-- ¡La clave! Capturar y limpiar el punto
             captura = True
 
         # Colocar la ficha de reingreso en el destino
         destino.append(ficha_reingreso) 
         
-        return captura
+        return captura # Devuelve si hubo captura para que game.py lo maneje
     
     def sacar_ficha(self, color, desde):
         #Cuando todas las fichas están en el ultimo cuadrante del contendor, se pueden sacar

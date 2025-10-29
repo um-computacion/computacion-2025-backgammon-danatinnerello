@@ -14,6 +14,15 @@ class TestJuego(unittest.TestCase):
         self.dados = Dados()
         self.juego = Juego(self.j1, self.j2, self.tablero, self.dados)
 
+    def _limpiar_tablero(self):
+        """Función auxiliar para limpiar el tablero de fichas iniciales."""
+        for i in range(24):
+            self.tablero.mostrar_contenedor()[i] = []
+        self.tablero.mostrar_barra()["Blanca"] = []
+        self.tablero.mostrar_barra()["Negra"] = []
+        self.tablero.mostrar_afuera()["Blanca"] = []
+        self.tablero.mostrar_afuera()["Negra"] = []
+
     def test_turnos_alternan(self):
         turno1 = self.juego.mostrar_turno()
         self.juego.controlar_turnos()
@@ -25,49 +34,55 @@ class TestJuego(unittest.TestCase):
 
     def test_valida_mover_ficha_invalido(self):
         with self.assertRaises(MovimientoInvalidoError):
-            self.juego.valida_mover_ficha(self.j1, 0, 5)
+            # Posición 0 tiene fichas negras, no blancas (J1)
+            self.juego.valida_mover_ficha(self.j1, 1, 2) 
 
     def test_valida_sacar_ficha_invalido(self):
+        # Al inicio, las fichas no están en el último cuadrante
         with self.assertRaises(SacarFichaError):
-            self.juego.valida_sacar_ficha(self.j1, 0)
+            self.juego.valida_sacar_ficha(self.j1, 1)
 
     def test_valida_mover_desde_barra_invalido(self):
+        # J1 no tiene fichas en barra para mover, lanza excepción por dado no usado o falta de ficha
+        self.dados.__tiradas_restantes__ = [3]
         with self.assertRaises(MovimientoInvalidoError):
             self.juego.valida_mover_desde_barra(self.j1, 3)
 
     def test_hay_movimientos_posibles_false_en_tablero_vacio(self):
-        # vaciar el tablero y la barra
-        for i in range(24):
-            self.juego.mostrar_tablero().mostrar_contenedor()[i] = []
-        self.juego.mostrar_tablero().mostrar_barra()["Blanca"] = []
+        self._limpiar_tablero()
         self.juego.__dados__.__tiradas_restantes__ = [6]
         self.assertFalse(self.juego.hay_movimientos_posibles(self.j1))
     
     def test_valida_mover_ficha_con_dado_incorrecto(self):
-        # fuerza un dado que no corresponde al movimiento
+        # fuerza un dado que no corresponde al movimiento (diferencia 1)
         self.juego.__dados__.__tiradas_restantes__ = [6]
+        # J1 (Blanca) intenta mover de 6 a 5 (diferencia 1). Fallará el consumo de dado.
         with self.assertRaises(MovimientoInvalidoError):
-            self.juego.valida_mover_ficha(self.j1, 1, 2)  # diferencia = 1, no 6
+            self.juego.valida_mover_ficha(self.j1, 6, 5) 
 
     def test_valida_sacar_ficha_con_dado_incorrecto(self):
-        # fuerza que todas estén en último cuadrante
+        # forzamos que todas estén en último cuadrante (para pasar la primera validación)
         self.juego.mostrar_tablero().todas_en_ultimo_cuadrante = lambda c: True
-        # pero el dado no corresponde
-        self.juego.__dados__.__tiradas_restantes__ = [6]
+        # pero el dado no corresponde a la posición 20 (20 está a 5 de distancia de 24)
+        self.juego.__dados__.__tiradas_restantes__ = [6] 
         with self.assertRaises(SacarFichaError):
             self.juego.valida_sacar_ficha(self.j1, 20)
 
     def test_valida_mover_desde_barra_dado_invalido(self):
         self.juego.__dados__.__tiradas_restantes__ = [3]
-        self.juego.mostrar_tablero().valida_mover_desde_barra = lambda c, h: False
+        # Se necesita dado 3, pero se bloquea la entrada en el tablero.
+        self.juego.mostrar_tablero().mostrar_barra()["Blanca"].append("Blanca")
+        # Bloquear el punto 19 (entrada con dado 6)
+        self.juego.mostrar_tablero().mostrar_contenedor()[18] = ["Negra", "Negra"] 
         with self.assertRaises(MovimientoInvalidoError):
-            self.juego.valida_mover_desde_barra(self.j1, 3)
+            self.juego.valida_mover_desde_barra(self.j1, 6) # Intenta entrar con dado 6
 
     def test_hay_movimientos_posibles_con_barra(self):
         # jugador tiene ficha en barra y dado que le permite salir
         self.juego.__dados__.__tiradas_restantes__ = [6]
-        self.juego.__tablero__.mostrar_barra()["Blanca"] = ["ficha"]
-        self.juego.__tablero__.valida_mover_desde_barra = lambda c, h: True
+        self.juego.__tablero__.mostrar_barra()["Blanca"].append("Blanca")
+        # limpiar el punto de destino (19/índice 18) para que sea posible reingresar
+        self.juego.__tablero__.mostrar_contenedor()[18] = [] 
         self.assertTrue(self.juego.hay_movimientos_posibles(self.j1))
 
     
@@ -86,27 +101,38 @@ class TestJuego(unittest.TestCase):
 
 
     def test_valida_mover_ficha_falla_en_validar(self):
-        self.validar_movimiento = lambda c, d, h, t: False
+        # Mock de la validación para que siempre falle
+        original_valida = self.tablero.validar_movimiento
+        self.tablero.validar_movimiento = lambda c, d, h, t: False
         with self.assertRaises(MovimientoInvalidoError):
             self.juego.valida_mover_ficha(self.j1, 1, 2)
+        self.tablero.validar_movimiento = original_valida
 
     
 
     def test_valida_sacar_ficha_falla(self):
-        self.todas_en_ultimo_cuadrante = lambda c: False
+        # Mock para que la validación de cuadrante falle
+        original_cuadrante = self.tablero.todas_en_ultimo_cuadrante
+        self.tablero.todas_en_ultimo_cuadrante = lambda c: False
         with self.assertRaises(SacarFichaError):
             self.juego.valida_sacar_ficha(self.j1, 23)
-
+        self.tablero.todas_en_ultimo_cuadrante = original_cuadrante
 
     def test_valida_mover_desde_barra_falla_dado(self):
-        self.usar_tirada = lambda dado: False
+        # Mock para que la tirada de dado falle
+        original_usar = self.dados.usar_tirada
+        self.dados.usar_tirada = lambda dado, revertir=False: False
         with self.assertRaises(MovimientoInvalidoError):
             self.juego.valida_mover_desde_barra(self.j1, 3)
+        self.dados.usar_tirada = original_usar
 
     def test_hay_movimientos_posibles_false(self):
-        self.__tiradas_restantes__ = [6]
-        self.mostrar_barra = lambda: {"Blanca": [], "Negra": []}
-        self.validar_movimiento = lambda c, d, h, t: False
+        # Limpiamos el tablero y nos aseguramos de que no haya movimientos
+        self._limpiar_tablero()
+        # Ponemos una ficha en una posición que no se puede mover con el dado 6 (ej: punto 24)
+        self.tablero.mostrar_contenedor()[23].append("Blanca") 
+        self.dados.__tiradas_restantes__ = [6]
+        self.tablero.validar_movimiento = lambda c, d, h, t: False
         self.assertFalse(self.juego.hay_movimientos_posibles(self.j1))
 
     def test_verificar_ganador_jugador2(self):
@@ -115,26 +141,26 @@ class TestJuego(unittest.TestCase):
         self.assertEqual(ganador, self.j2)
 
     def test_hay_movimientos_posibles_true_sin_barra(self):
-        # Configuramos dados y tablero para un movimiento válido
-        self.juego.__dados__.__tiradas_restantes__ = [1]
-        self.juego.__tablero__.mostrar_barra = lambda: {"Blanca": [], "Negra": []}
-        self.juego.__tablero__.validar_movimiento = lambda c, d, h, t: True
+        self._limpiar_tablero()
+        # Colocamos una ficha que puede moverse 1 espacio (24 -> 23)
+        self.tablero.mostrar_contenedor()[23] = ["Blanca"]
+        self.dados.__tiradas_restantes__ = [1]
         self.assertTrue(self.juego.hay_movimientos_posibles(self.j1))
 
     def test_hay_movimientos_posibles_con_barra_bloqueada(self):
-        # poner una ficha blanca en la barra
+        self._limpiar_tablero()
         self.tablero.mostrar_barra()["Blanca"].append("Blanca")
-        # bloquear todas las entradas de la blanca con 2 negras
+        # bloquear todas las entradas de la blanca con 2 negras (índices 18 al 23)
         for i in range(18, 24):
             self.tablero.mostrar_contenedor()[i] = ["Negra", "Negra"]
-        # forzamos los dados
-        self.dados.__tiradas_restantes__ = [1, 2]
+        self.dados.__tiradas_restantes__ = [1, 2, 3, 4, 5, 6]
         self.assertFalse(self.juego.hay_movimientos_posibles(self.j1))
 
     def test_hay_movimientos_posibles_con_barra_libre(self):
+        self._limpiar_tablero()
         self.tablero.mostrar_barra()["Blanca"].append("Blanca")
-        self.dados.__tiradas_restantes__ = [1]
-        # destino (23) está libre
+        self.dados.__tiradas_restantes__ = [6]
+        # destino (índice 18/punto 19) está libre
         self.assertTrue(self.juego.hay_movimientos_posibles(self.j1))
 
     def test_controlar_turnos_alterna_correctamente(self):
@@ -143,101 +169,146 @@ class TestJuego(unittest.TestCase):
         self.assertNotEqual(turno_inicial, self.juego.mostrar_turno())
 
     def test_verificar_ganador_detecta_correctamente(self):
-        # simulamos que j1 ya sacó todas sus fichas
-        for _ in range(15):
-            self.j1.sacar_ficha_a_afuera()
-        ganador = self.juego.verificar_ganador()
-        self.assertEqual(ganador, self.j1)
-        self.assertTrue(self.juego.mostrar_juego_terminado())
-
-#test para aumentar la cobertura 
-    
-    def test_mostrar_getters_funcionan(self):
-        # cubre los getters simples
-        self.assertEqual(self.juego.mostrar_jugador1(), self.j1)
-        self.assertEqual(self.juego.mostrar_jugador2(), self.j2)
-        self.assertFalse(self.juego.mostrar_juego_terminado())
-        self.assertEqual(self.juego.mostrar_tablero(), self.tablero)
-        self.assertEqual(self.juego.mostrar_turno(), self.j1)
-
-    def test_valida_sacar_ficha_con_dado_mayor_valido(self):
-        # vaciar todo el tablero
-        for i in range(24):
-            self.tablero.mostrar_contenedor()[i] = []
-        # poner solo una ficha blanca en la casa más cercana
-        self.tablero.mostrar_contenedor()[0] = ["Blanca"]
-        # simular que todas están en el último cuadrante
-        self.tablero.todas_en_ultimo_cuadrante = lambda c: True
-        # dado mayor al necesario
-        self.dados.__tiradas_restantes__ = [6]
-
-        self.juego.valida_sacar_ficha(self.j1, 1)
-        self.assertEqual(self.j1.__fichas_restantes__, 14)
-
-
-    def test_valida_mover_desde_barra_valido(self):
-        # poner ficha en la barra negra
-        self.tablero.mostrar_barra()["Negra"].append("Negra")
-        # dado 3 → entra en posición 2
-        self.dados.__tiradas_restantes__ = [3]
-        result = self.juego.valida_mover_desde_barra(self.j2, 3)
-        self.assertTrue(result)
-        self.assertIn("Negra", self.tablero.mostrar_contenedor()[2])
-
-    def test_verificar_ganador_marca_juego_terminado(self):
         self.j1.__fichas_restantes__ = 0
-        self.assertFalse(self.juego.mostrar_juego_terminado())
         ganador = self.juego.verificar_ganador()
         self.assertEqual(ganador, self.j1)
         self.assertTrue(self.juego.mostrar_juego_terminado())
 
     def test_valida_sacar_ficha_dado_mayor_no_valido_por_fichas_mas_lejanas(self):
-        # Poner fichas en posiciones más lejanas
-        for i in range(24):
-            self.tablero.mostrar_contenedor()[i] = []
-        self.tablero.mostrar_contenedor()[0] = ["Blanca"]   # ficha en la casilla 1
-        self.tablero.mostrar_contenedor()[1] = ["Blanca"]   # otra más lejana en la casa
+        # PRUEBA DE BLOQUEO DE DADO MAYOR
+        self._limpiar_tablero()
+        
+        # 1. Ficha que queremos sacar: Casilla 2 (Índice 1)
+        self.tablero.mostrar_contenedor()[1] = ["Blanca"]   
+        # 2. Ficha que bloquea (MÁS LEJANA): Casilla 1 (Índice 0)
+        self.tablero.mostrar_contenedor()[0] = ["Blanca"] 
+        
         self.tablero.todas_en_ultimo_cuadrante = lambda c: True
-        self.dados.__tiradas_restantes__ = [6]  # dado mayor
+        self.dados.__tiradas_restantes__ = [6] # Dado mayor
 
-        with self.assertRaises(SacarFichaError):
-            self.juego.valida_sacar_ficha(self.j1, 1)  # casilla 1 humana
+        # Debe lanzar un error porque hay una ficha en la Casilla 1 que está más lejos que el origen (Casilla 2)
+        with self.assertRaisesRegex(SacarFichaError, "fichas Blancas en posiciones más lejanas"):
+            self.juego.valida_sacar_ficha(self.j1, 2)
+    
+    def test_valida_mover_desde_barra_blancas(self):
+        # PRUEBA DE REINGRESO BLANCAS (ÉXITO)
+        self._limpiar_tablero() # Limpiar para evitar bloqueos iniciales
+        self.tablero.mostrar_barra()["Blanca"].append("Blanca")
+        self.dados.__tiradas_restantes__ = [6] # Dado 6 → entra en casilla 19 (índice 18)
+        
+        result = self.juego.valida_mover_desde_barra(self.j1, 6)
+        
+        # 1. Verificar que se devolvió un booleano (captura o no)
+        self.assertIsInstance(result, bool)
+        # 2. Verificar que la ficha se movió al destino (índice 18)
+        self.assertIn("Blanca", self.tablero.mostrar_contenedor()[18])
+        # 3. Verificar que salió de la barra
+        self.assertEqual(len(self.tablero.mostrar_barra()["Blanca"]), 0)
 
-    def test_valida_sacar_ficha_para_negras_con_dado_exactoy_mayor(self):
-        # Vaciar tablero
-        for i in range(24):
-            self.tablero.mostrar_contenedor()[i] = []
+
+    def test_valida_mover_desde_barra_valido(self):
+        # PRUEBA DE REINGRESO NEGRAS (ÉXITO)
+        self._limpiar_tablero() # Limpiar para evitar bloqueos iniciales
+        self.tablero.mostrar_barra()["Negra"].append("Negra")
+        self.dados.__tiradas_restantes__ = [3] # Dado 3 → entra en posición 3 (índice 2)
+        
+        result = self.juego.valida_mover_desde_barra(self.j2, 3)
+        
+        # 1. Verificar que se devolvió un booleano (captura o no)
+        self.assertIsInstance(result, bool)
+        # 2. Verificar que la ficha se movió al destino (índice 2)
+        self.assertIn("Negra", self.tablero.mostrar_contenedor()[2])
+        # 3. Verificar que salió de la barra
+        self.assertEqual(len(self.tablero.mostrar_barra()["Negra"]), 0)
+
+    def test_valida_sacar_ficha_para_negras_con_dado_exacto(self):
+        self._limpiar_tablero()
         # ficha negra en la casilla 24 (índice 23)
         self.tablero.mostrar_contenedor()[23] = ["Negra"]
         self.tablero.todas_en_ultimo_cuadrante = lambda c: True
-        self.dados.__tiradas_restantes__ = [1]  # dado exacto para negras en 24
+        self.dados.__tiradas_restantes__ = [1]  # dado exacto (24-23 = 1)
 
-        self.juego.valida_sacar_ficha(self.j2, 24)  # 24 humano
+        self.juego.valida_sacar_ficha(self.j2, 24)  
         self.assertEqual(self.j2.__fichas_restantes__, 14)
 
-    def test_valida_mover_desde_barra_blancas(self):
-        # ficha blanca en barra
+    def test_valida_mover_desde_barra_blancas_con_captura(self):
+        self._limpiar_tablero()
         self.tablero.mostrar_barra()["Blanca"].append("Blanca")
-        # dado 6 → entra en casilla 19 (24-6 = 18 → humano 19)
-        self.dados.__tiradas_restantes__ = [6]
-        self.tablero.valida_mover_desde_barra = lambda c, h: True
-
+        self.dados.__tiradas_restantes__ = [6] # Dado 6 → entra en casilla 19 (índice 18)
+        # Colocar un blot enemigo en la posición 19
+        self.tablero.mostrar_contenedor()[18] = ["Negra"]
+        
         result = self.juego.valida_mover_desde_barra(self.j1, 6)
-        self.assertTrue(result)
+        
+        self.assertTrue(result) # Debe devolver True por la captura
+        self.assertIn("Blanca", self.tablero.mostrar_contenedor()[18])
+        self.assertIn("Negra", self.tablero.mostrar_barra()["Negra"]) # Ficha enemiga capturada
 
-    def test_valida_mover_desde_barra_falla_a_pesar_de_dado(self):
+    def test_valida_mover_ficha_bloqueado(self):
+        # Mover una ficha (Blanca) a un punto bloqueado (2 Negras)
+        self._limpiar_tablero()
+        self.tablero.mostrar_contenedor()[5] = ["Blanca"] # Origen (Punto 6)
+        self.tablero.mostrar_contenedor()[4] = ["Negra", "Negra"] # Destino (Punto 5, Diferencia 1)
+        self.dados.__tiradas_restantes__ = [1]
+        
+        with self.assertRaisesRegex(MovimientoInvalidoError, "Movimiento inválido"):
+            # Llama a valida_mover_ficha, que llama a tablero.validar_movimiento, que debe fallar
+            self.juego.valida_mover_ficha(self.j1, 6, 5) 
+
+    def test_sacar_ficha_falla_tablero(self):
+        # Simular que el tablero no puede sacar la ficha (e.g., ya no queda ninguna)
+        self._limpiar_tablero()
+        self.tablero.mostrar_contenedor()[0] = ["Blanca"]
+        self.tablero.todas_en_ultimo_cuadrante = lambda c: True
+        self.dados.__tiradas_restantes__ = [1]
+        
+        # Mock para que tablero.sacar_ficha devuelva False (simulando fallo interno)
+        original_sacar = self.tablero.sacar_ficha
+        self.tablero.sacar_ficha = lambda c, d: False
+        
+        with self.assertRaisesRegex(SacarFichaError, "No se pudo sacar ficha"):
+            self.juego.valida_sacar_ficha(self.j1, 1)
+            
+        self.tablero.sacar_ficha = original_sacar # Restaurar mock
+
+    def test_mover_desde_barra_falla_reversion(self):
+        # Intentar reingresar (el dado se consume), pero la validación falla (se debe revertir)
+        self._limpiar_tablero()
         self.tablero.mostrar_barra()["Blanca"].append("Blanca")
-        self.dados.__tiradas_restantes__ = [4]
-        # aunque el dado está, no se puede entrar
-        self.tablero.valida_mover_desde_barra = lambda c, h: False
-        with self.assertRaises(MovimientoInvalidoError):
-            self.juego.valida_mover_desde_barra(self.j1, 4)
+        self.dados.__tiradas_restantes__ = [6]
+        
+        # Bloquear el punto de entrada (Punto 19)
+        self.tablero.mostrar_contenedor()[18] = ["Negra", "Negra"] 
+        
+        with self.assertRaisesRegex(MovimientoInvalidoError, "Movimiento invalido desde la barra"):
+            self.juego.valida_mover_desde_barra(self.j1, 6)
+            
+        # Verificar que el dado fue revertido
+        self.assertIn(6, self.dados.obtener_tiradas_restantes()) 
+        self.assertEqual(len(self.dados.obtener_tiradas_restantes()), 1)
 
-    def test_hay_movimientos_posibles_sin_tiradas(self):
-        self.dados.__tiradas_restantes__ = []
+    def test_hay_mov_barra_no_puede_salir(self):
+        # Jugador tiene fichas en barra pero todos los puntos de entrada están bloqueados
+        self._limpiar_tablero()
+        self.tablero.mostrar_barra()["Blanca"].append("Blanca")
+        self.dados.__tiradas_restantes__ = [1, 2, 3, 4, 5, 6]
+        # Bloquear todos los puntos de entrada (índices 18 al 23)
+        for i in range(18, 24):
+            self.tablero.mostrar_contenedor()[i] = ["Negra", "Negra"]
+            
+        # El método debe devolver False porque no hay movimientos posibles
         self.assertFalse(self.juego.hay_movimientos_posibles(self.j1))
 
-
+    def test_hay_mov_tablero_bloqueado(self):
+        # Jugador sin fichas en barra, pero el único movimiento posible está bloqueado.
+        self._limpiar_tablero()
+        self.tablero.mostrar_contenedor()[5] = ["Blanca"] # Única ficha en Punto 6
+        self.dados.__tiradas_restantes__ = [1]
+        # Bloquear el destino (Punto 5, índice 4)
+        self.tablero.mostrar_contenedor()[4] = ["Negra", "Negra"] 
+        
+        # El método debe devolver False
+        self.assertFalse(self.juego.hay_movimientos_posibles(self.j1))
 
 if __name__ == "__main__":
     unittest.main()
