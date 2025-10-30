@@ -7,8 +7,8 @@ core/board.py             112      8    93%   37-39, 95, 113, 120-122
 core/checker.py            14      0   100%
 core/dice.py               27      1    96%   45
 core/excepcions.py         16      0   100%
-core/game.py               98     14    86%   28, 31, 60-67, 99-111
+core/game.py              117     12    90%   28, 31, 62, 99-105, 160-161
 core/player.py             21      2    90%   17, 20
 pygame_ui/__init__.py       0      0   100%
 -----------------------------------------------------
-TOTAL                     354     30    92%
+TOTAL                     373     28    92%
