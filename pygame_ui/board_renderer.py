@@ -7,6 +7,7 @@ Responsabilidad:
 - No contiene reglas del juego (la lógica sigue en core/).
 - Solo “pinta” lo que le dicen que pinte.
 """
+
 import pygame
 
 class TableroGrafico:
@@ -103,7 +104,7 @@ class TableroGrafico:
         """Dibuja las fichas en la barra central (ahora escaladas verticalmente)."""
         barra = tablero.mostrar_barra()
         x_centro = self.ancho // 2
-        alto_zona = self.alto // 2 - 20  # espacio disponible para cada mitad
+        alto_zona = self.alto // 2 - 20 
 
         for color, fichas in barra.items():
             cantidad = len(fichas)
@@ -146,22 +147,89 @@ class TableroGrafico:
         texto_negra_rect = texto_negra.get_rect(center=(x_centro_barra, self.alto - 40))
         pygame.draw.rect(self.pantalla, (0, 0, 0), texto_negra_rect.inflate(16, 10), border_radius=6)
         self.pantalla.blit(texto_negra, texto_negra_rect)
+        
+    def obtener_punto_desde_click_en_ficha(self, pos, estado: dict):
+        """
+        Retorna el punto (1-24) si el click cae dentro de la ficha SUPERIOR de ese punto.
+        """
+        x_click, y_click = pos
+        max_visibles = 5 
+
+        for punto, datos in estado.items():
+            cantidad = datos["cantidad"]
+            
+            if cantidad == 0:
+                continue
+
+            # Recalcular las coordenadas x e y de las fichas como en dibujar_fichas
+            if punto <= 12:
+                if punto <= 6:
+                    x = (6 - punto) * self.ancho_triangulo + self.ancho_triangulo // 2 + self.ancho_barra // 2 + (7 * self.ancho_triangulo)
+                else:
+                    x = (12 - punto) * self.ancho_triangulo + self.ancho_triangulo // 2 + self.ancho_barra // 2
+                y_base = self.radio_ficha
+                step = self.radio_ficha * 2
+                i = min(cantidad, max_visibles) - 1 # Índice de la ficha superior
+            else:
+                if punto <= 18:
+                    x = (punto - 13) * self.ancho_triangulo + self.ancho_triangulo // 2 + self.ancho_barra // 2
+                else:
+                    x = (punto - 19) * self.ancho_triangulo + self.ancho_triangulo // 2 + self.ancho_barra // 2 + (7 * self.ancho_triangulo)
+                y_base = self.alto - self.radio_ficha
+                step = -self.radio_ficha * 2
+                i = min(cantidad, max_visibles) - 1 # Índice de la ficha superior
+
+            # Calcular la posición de la ficha superior
+            y = y_base + step * i
+            
+            # Chequear colisión con el círculo
+            distancia = ((x_click - x)**2 + (y_click - y)**2)**0.5
+            if distancia <= self.radio_ficha:
+                return punto 
+
+        return None
 
     def obtener_punto_desde_click(self, pos):
+        """
+        Mapea el clic a un punto (triángulo) vacío o de destino (no origen).
+        """
         x, y = pos
-        margen = self.ancho // 20
-        barra = self.ancho // 20
-        mitad = self.alto // 2
-        parte_superior = y < mitad
-        if x < margen or x > self.ancho - margen:
-            return None
-        x_rel = x - margen
-        if x > margen + 6 * self.ancho_triangulo:
-            x_rel -= barra
-        indice = int(x_rel // self.ancho_triangulo)
-        if indice < 0 or indice > 11:
-            return None
-        return 12 - indice if parte_superior else 13 + indice
+        
+        margen_lateral = self.ancho_barra // 2 
+        
+        if x < margen_lateral or x > self.ancho - margen_lateral:
+            return None 
+
+        x_barra = (self.ancho / 2) - (self.ancho_barra / 2)
+        parte_superior = y < self.alto // 2
+
+        ancho_punto = self.ancho_triangulo
+
+        if x > x_barra and x < x_barra + self.ancho_barra:
+            return None 
+
+        if x > x_barra + self.ancho_barra:
+            # Cuadrante derecho: Puntos 1 a 6 (arriba) o 19 a 24 (abajo)
+            x_rel = x - (x_barra + self.ancho_barra)
+            indice = int(x_rel // ancho_punto) 
+            
+            if indice >= 6: return None 
+
+            if parte_superior:
+                 return 6 - indice 
+            else:
+                 return 19 + indice 
+        else:
+            # Cuadrante izquierdo: Puntos 7 a 12 (arriba) o 13 a 18 (abajo)
+            x_rel = x - margen_lateral
+            indice = int(x_rel // ancho_punto) 
+            
+            if indice >= 6: return None 
+
+            if parte_superior:
+                 return 12 - indice 
+            else:
+                 return 13 + indice 
 
     def obtener_barra_lateral_desde_click(self, pos):
         x, y = pos

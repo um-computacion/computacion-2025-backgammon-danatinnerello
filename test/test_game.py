@@ -187,7 +187,7 @@ class TestJuego(unittest.TestCase):
         self.dados.__tiradas_restantes__ = [6] # Dado mayor
 
         # Debe lanzar un error porque hay una ficha en la Casilla 1 que está más lejos que el origen (Casilla 2)
-        with self.assertRaisesRegex(SacarFichaError, "fichas Blancas en posiciones más lejanas"):
+        with self.assertRaisesRegex(SacarFichaError, "Hay fichas Blanca en posiciones más lejanas"):
             self.juego.valida_sacar_ficha(self.j1, 2)
     
     def test_valida_mover_desde_barra_blancas(self):
@@ -310,5 +310,82 @@ class TestJuego(unittest.TestCase):
         # El método debe devolver False
         self.assertFalse(self.juego.hay_movimientos_posibles(self.j1))
 
+    def test_valida_mover_ficha_cambia_turno_al_final(self):
+        # Limpiar y dejar una sola tirada exacta para el movimiento
+        self._limpiar_tablero()
+        self.tablero.mostrar_contenedor()[5] = ["Blanca"] # Punto 6
+        self.tablero.mostrar_contenedor()[4] = [] # Punto 5
+        self.dados.__tiradas_restantes__ = [1]
+        
+        turno_inicial = self.juego.mostrar_turno()
+        
+        # Ejecutar el único movimiento con el dado restante (6 -> 5)
+        self.juego.valida_mover_ficha(self.j1, 6, 5)
+        
+        # El turno debe haber cambiado automáticamente
+        self.assertNotEqual(turno_inicial, self.juego.mostrar_turno())
+        self.assertEqual(len(self.dados.obtener_tiradas_restantes()), 0)
+ 
+    def test_valida_mover_desde_barra_cambia_turno_al_final(self):
+        # Ficha en barra y una sola tirada exacta
+        self.tablero.mostrar_barra()["Negra"].append("Negra")
+        self.dados.__tiradas_restantes__ = [1] # Dado 1 -> entra en punto 1 (índice 0)
+        self.tablero.mostrar_contenedor()[0] = []
+        
+        turno_inicial = self.juego.mostrar_turno()
+        
+        # Mover ficha desde la barra con el dado restante
+        self.juego.valida_mover_desde_barra(self.j2, 1) 
+        
+        # El turno debe haber cambiado
+        self.assertNotEqual(turno_inicial, self.juego.mostrar_turno())
+        self.assertEqual(len(self.dados.obtener_tiradas_restantes()), 0)
+
+
+    def test_valida_mover_desde_barra_falla_tablero_revierte_dado(self):
+        #Ficha en barra y dado disponible
+        self.tablero.mostrar_barra()["Blanca"].append("Blanca")
+        self.dados.__tiradas_restantes__ = [3]
+        
+        # Bloquear el punto de entrada (Punto 22, índice 21)
+        self.tablero.mostrar_contenedor()[21] = ["Negra", "Negra"] 
+        
+        # Asegurarse de que el dado fue consumido temporalmente por Juego.valida_mover_desde_barra
+        # y luego revertido si falla la validación del tablero
+        self.assertEqual(len(self.dados.obtener_tiradas_restantes()), 1)
+        
+        with self.assertRaisesRegex(MovimientoInvalidoError, "Movimiento invalido desde la barra"):
+            # Intenta reingresar con dado 3 a punto 22 (índice 21)
+            self.juego.valida_mover_desde_barra(self.j1, 3) 
+            
+        # Debe confirmar que el dado fue revertido
+        self.assertIn(3, self.dados.obtener_tiradas_restantes())
+
+    def test_hay_movimientos_posibles_sacar_ficha_dado_mayor(self):
+        # Tablero en posición de sacar fichas
+        self._limpiar_tablero()
+        self.tablero.todas_en_ultimo_cuadrante = lambda c: True
+        
+        # Ficha más lejana en Punto 3 (índice 2), requiere dado 4 para salir (3 + 1 = 4)
+        self.tablero.mostrar_contenedor()[2] = ["Blanca"]
+        
+        # Dado disponible: 6 (mayor que el 4 requerido, y es la ficha más lejana)
+        self.dados.__tiradas_restantes__ = [6]
+        
+        # Debe ser posible sacar la ficha con el dado mayor (6)
+        self.assertTrue(self.juego.hay_movimientos_posibles(self.j1))
+
+    def test_hay_movimientos_posibles_movimiento_normal(self):
+        # Limpiar tablero, sin barra, no todas en el cuadrante final
+        self._limpiar_tablero()
+        self.tablero.todas_en_ultimo_cuadrante = lambda c: False 
+        
+        # Ficha Negra en Punto 1 (índice 0)
+        self.tablero.mostrar_contenedor()[0] = ["Negra"] 
+        # Dado 1 disponible, permite mover a Punto 2 (índice 1)
+        self.dados.__tiradas_restantes__ = [1]
+        
+        # Debe ser posible el movimiento (0 -> 1)
+        self.assertTrue(self.juego.hay_movimientos_posibles(self.j2))
 if __name__ == "__main__":
     unittest.main()
