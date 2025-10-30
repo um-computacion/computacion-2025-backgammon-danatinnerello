@@ -66,49 +66,52 @@ class Juego:
         if not self.__dados__.obtener_tiradas_restantes():
             self.controlar_turnos()
 
-    def valida_sacar_ficha(self, jugador:Jugador, desde):
+    def valida_sacar_ficha(self, jugador: Jugador, desde):
         desde_index = desde - 1
         color = jugador.obtener_color()
         tablero = self.__tablero__
 
         if not tablero.todas_en_ultimo_cuadrante(color):
-            raise SacarFichaError("No todas las fichas están en el último cuadrante")
-        
-        #obtener la distancia (número exacto de dado para sacar desde esa posición)
-        if color == "Blanca":
-            distancia = desde_index + 1
-        else:  # Negra
-            distancia = 24 - desde_index
-        
+            raise SacarFichaError("No todas las fichas están en el último cuadrante.")
+
         tiradas = self.__dados__.obtener_tiradas_restantes()
 
-        #si existe un dado exacto para esa ficha, usarlo
+        # Calcular distancia hasta fuera
+        if color == "Blanca":
+            distancia = desde_index + 1  # puntos 1–6
+            # comprobar si hay fichas más lejos (más hacia el punto 1)
+            hay_mas_lejanas = any(tablero.mostrar_contenedor()[i] for i in range(desde_index))
+        else:  # Negras
+            distancia = 24 - desde_index  # puntos 19–24 → 5,4,3,2,1,0
+            # comprobar si hay fichas más lejos (más hacia el punto 24)
+            hay_mas_lejanas = any(tablero.mostrar_contenedor()[i] for i in range(desde_index + 1, 24))
+
+        # Caso 1: hay un dado exacto → usarlo directamente
         if distancia in tiradas:
             self.__dados__.usar_tirada(distancia)
-            if not tablero.sacar_ficha(color, desde_index):
-                raise SacarFichaError("No se pudo sacar ficha desde esa posición")
+            if not tablero.sacar_ficha(color, desde_index):  # <-- Agregamos el chequeo del resultado
+                raise SacarFichaError("No se pudo sacar ficha. Fallo interno del tablero.") 
             jugador.sacar_ficha_a_afuera()
-            return
+            return distancia
 
-        # CORRECCIÓN DADO MAYOR: verificar si hay fichas en posiciones más lejanas
-        if color == "Blanca":
-            if any(tablero.mostrar_contenedor()[i] for i in range(desde_index)):
-                # Lanza la excepción inmediatamente
-                raise SacarFichaError("Hay fichas Blancas en posiciones más lejanas que el punto seleccionado.")
-        else:  # Negra
-            if any(tablero.mostrar_contenedor()[i] for i in range(desde_index + 1, 24)):
-                # Lanza la excepción inmediatamente
-                raise SacarFichaError("Hay fichas Negras en posiciones más lejanas que el punto seleccionado.")
+        # Caso 2: dado mayor → permitido si NO hay fichas más lejanas
+        if not hay_mas_lejanas:
+            dado_mayor = next((d for d in sorted(tiradas) if d > distancia), None)
+            if dado_mayor:
+                self.__dados__.usar_tirada(dado_mayor)
+                if not tablero.sacar_ficha(color, desde_index): # <-- Agregamos el chequeo del resultado
+                    raise SacarFichaError("No se pudo sacar ficha. Fallo interno del tablero.")
+                jugador.sacar_ficha_a_afuera()
+                return dado_mayor
+        # VÉA el caso donde el dado es mayor PERO hay fichas más lejanas
+        elif hay_mas_lejanas:
+            dado_mayor = next((d for d in sorted(tiradas) if d > distancia), None)
+            if dado_mayor:
+                # La condición hay_mas_lejanas es verdadera Y tenemos un dado mayor que queremos usar
+                raise SacarFichaError(f"No puedes usar el dado {dado_mayor}. Hay fichas {color} en posiciones más lejanas (puntos 1-{desde} para Blancas, o {desde+2}-24 para Negras).")
 
-        # Si no se lanzó excepción, entonces puede usar un dado mayor
-        # Buscamos si existe un dado mayor o igual disponible (priorizamos dado menor si es mayor)
-        for d in sorted(tiradas):
-            if d >= distancia:
-                # ... (resto del código para usar dado)
-                return
-
-        # si no había ningún dado válido
-        raise SacarFichaError("Ese dado no sirve para sacar ficha")
+        # Si ninguna opción funcionó:
+        raise SacarFichaError("No se puede sacar ficha desde este punto con los dados actuales.")
 
     def valida_mover_desde_barra(self,jugador:Jugador,dado):
         if not self.__dados__.usar_tirada(dado):
@@ -136,21 +139,37 @@ class Juego:
     def hay_movimientos_posibles(self, jugador: Jugador):
         tiradas = self.__dados__.obtener_tiradas_restantes()
         color = jugador.obtener_color()
+        tablero = self.__tablero__
 
-        # Si el jugador tiene fichas en la barra, debe intentar salir primero
-        if self.__tablero__.mostrar_barra()[color]:
+        # Si tiene fichas en la barra, primero debe intentar reingresar
+        if tablero.mostrar_barra()[color]:
             for dado in tiradas:
                 hacia = 24 - dado if color == "Blanca" else dado - 1
-                if self.__tablero__.valida_mover_desde_barra(color, hacia):
+                if tablero.valida_mover_desde_barra(color, hacia):
                     return True
             return False
 
-        # Si no hay fichas en la barra, revisar todas las posiciones
+        # Si todas están en el último cuadrante, revisar si se puede sacar alguna ficha
+        if tablero.todas_en_ultimo_cuadrante(color):
+            for desde in range(24):
+                if tablero.mostrar_contenedor()[desde] and tablero.mostrar_contenedor()[desde][-1] == color:
+                    if color == "Blanca":
+                        distancia = desde + 1
+                        hay_mas_lejanas = any(tablero.mostrar_contenedor()[i] for i in range(desde))
+                    else:
+                        distancia = 24 - desde
+                        hay_mas_lejanas = any(tablero.mostrar_contenedor()[i] for i in range(desde + 1, 24))
+
+                    for dado in tiradas:
+                        if dado == distancia or (dado > distancia and not hay_mas_lejanas):
+                            return True
+            return False
+
+        # Si no está en el último cuadrante, buscar movimientos normales
         for desde in range(24):
             for dado in tiradas:
                 hacia = desde - dado if color == "Blanca" else desde + dado
                 if 0 <= hacia < 24:
-                    if self.__tablero__.validar_movimiento(color, desde, hacia, tiradas):
+                    if tablero.validar_movimiento(color, desde, hacia, tiradas):
                         return True
         return False
-
