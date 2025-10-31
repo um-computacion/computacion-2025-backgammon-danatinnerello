@@ -4,17 +4,17 @@
 Name                    Stmts   Miss  Cover   Missing
 -----------------------------------------------------
 cli/__init__.py             0      0   100%
-cli/cli.py                 66      5    92%   31-32, 84-85, 99
+cli/cli.py                 74      7    91%   48-50, 85, 112-113, 125
 core/__init__.py            0      0   100%
-core/board.py             112      8    93%   37-39, 95, 113, 120-122
+core/board.py             109      8    93%   34-36, 88, 107, 114-116
 core/checker.py            14      0   100%
 core/dice.py               27      1    96%   45
 core/excepcions.py         16      0   100%
-core/game.py              117     12    90%   28, 31, 62, 99-105, 160-161
+core/game.py              164     11    93%   41, 44, 94, 151-156, 211-212, 260, 266
 core/player.py             21      2    90%   17, 20
 pygame_ui/__init__.py       0      0   100%
 -----------------------------------------------------
-TOTAL                     373     28    92%
+TOTAL                     425     29    93%
 
 ```
 ## Pylint Report
