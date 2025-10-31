@@ -16,6 +16,19 @@ from core.excepcions import (
 
 class Juego:
     def __init__(self,nombre_jugador1:Jugador,nombre_jugador2:Jugador,tablero:Tablero = None,dados: Dados =None):
+      
+        nombre1 = nombre_jugador1.obtener_nombre()
+        nombre2 = nombre_jugador2.obtener_nombre()
+        
+        if not nombre1 or not nombre2:
+            raise MovimientoInvalidoError("Los nombres de los jugadores no pueden estar vacíos.")
+        
+        if nombre1 == nombre2:
+             raise MovimientoInvalidoError("Los nombres de los jugadores deben ser diferentes.")
+             
+        if not nombre1.replace(" ", "").isalpha() or not nombre2.replace(" ", "").isalpha():
+             raise MovimientoInvalidoError("Los nombres solo pueden contener letras y espacios.")
+        
         self.__tablero__ = tablero if tablero else Tablero()
         self.__jugador1__ = nombre_jugador1
         self.__jugador2__ = nombre_jugador2
@@ -65,7 +78,7 @@ class Juego:
             # ENCONTRAR QUÉ DADO(S) USAR Y VALIDAR PASOS INTERMEDIOS
             dado_principal, dado_secundario = self._encontrar_dado_y_tipo_movimiento(jugador, desde_index, hacia_index)
         except MovimientoInvalidoError as e:
-            raise MovimientoInvalidoError(f"Movimiento inválido: {e}")
+            raise MovimientoInvalidoError(str(e))
 
         dados_consumidos = []
         
@@ -146,7 +159,7 @@ class Juego:
             dado_mayor = next((d for d in sorted(tiradas) if d > distancia), None)
             if dado_mayor:
                 # La condición hay_mas_lejanas es verdadera Y tenemos un dado mayor que queremos usar
-                raise SacarFichaError(f"No puedes usar el dado {dado_mayor}. Hay fichas {color} en posiciones más lejanas (puntos 1-{desde} para Blancas, o {desde+2}-24 para Negras).")
+                raise SacarFichaError(f"No puedes usar el dado {dado_mayor}. Hay fichas en posiciones más lejanas.")
 
         # Si ninguna opción funcionó:
         raise SacarFichaError("No se puede sacar ficha desde este punto con los dados actuales.")
@@ -258,4 +271,4 @@ class Juego:
                     return (dados[0], dados[1])
                 
         # Si no se encontró ninguna combinación válida (ni simple ni compuesta)
-        raise MovimientoInvalidoError("La distancia no coincide con las tiradas disponibles, o el punto intermedio está bloqueado.")
+        raise MovimientoInvalidoError("No coincide con las tiradas disponibles, o el punto intermedio está bloqueado.")

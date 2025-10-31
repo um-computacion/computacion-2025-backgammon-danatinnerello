@@ -13,6 +13,7 @@ from pygame_ui.board_renderer import TableroGrafico, estado_desde_board
 from core.game import Juego
 from core.player import Jugador
 from pygame_ui.events import ManejadorEventos # Importar el nuevo manejador
+from core.excepcions import MovimientoInvalidoError, RendicionError, JuegoTerminadoError
 
 pygame.init()
 ANCHO_PANTALLA = 1000
@@ -118,13 +119,21 @@ def dibujar_todo(pantalla, renderer, juego, mensaje_ui=""):
 
 
 def main():
-    nombre1, nombre2 = pantalla_pedir_nombres()
-    if not nombre1 or not nombre2:
-        return
+    try:
+        nombre1, nombre2 = pantalla_pedir_nombres()
+        if not nombre1 or not nombre2:
+            return
 
-    jugador1 = Jugador(nombre1, "Blanca")
-    jugador2 = Jugador(nombre2, "Negra")
-    juego = Juego(jugador1, jugador2)
+        jugador1 = Jugador(nombre1, "Blanca")
+        jugador2 = Jugador(nombre2, "Negra")
+        
+        # La validación de nombres ocurre AQUÍ al crear el objeto Juego:
+        juego = Juego(jugador1, jugador2) 
+        
+    except MovimientoInvalidoError as e:
+        print(f"Error de inicialización: {e}")
+        return # Sale si la inicialización falla
+   
     juego.__dados__.tirar_dados()  # Primera tirada (inicia el juego)
 
     pantalla = pygame.display.set_mode((ANCHO_PANTALLA, ALTO_PANTALLA))
@@ -177,7 +186,8 @@ if __name__ == "__main__":
     main()
 
 #me falta:
-#añadir validaciones
+#pylint
+#docker
 #completar documentacionn
 #pulir detalles
 

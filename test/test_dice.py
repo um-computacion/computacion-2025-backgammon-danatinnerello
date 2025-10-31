@@ -45,4 +45,8 @@ class TestDados(unittest.TestCase):
         self.assertTrue(randint_patched.called)
         self.assertEqual(randint_patched.call_count, 2)
 
-    
+    def test_usar_tirada_revertir_true_not_in_list(self):
+        # Simula que se pide revertir un dado que no se encuentra en la lista (cubre la línea if revertir: return True)
+        self.dados.__tiradas_restantes__ = [3, 4]
+        self.assertTrue(self.dados.usar_tirada(5, revertir=True))
+        self.assertEqual(len(self.dados.obtener_tiradas_restantes()), 3) # El dado 5 fue añadido

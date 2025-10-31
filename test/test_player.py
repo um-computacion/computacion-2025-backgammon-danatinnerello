@@ -28,3 +28,15 @@ class TestJugador(unittest.TestCase):
         #si no tiene fichas restantes, no puede sacar mas
         self.jugador.__fichas_restantes__ =0
         self.assertFalse(self.jugador.sacar_ficha_a_afuera())
+
+    def test_constructor_atributos_correctos(self):
+        # Asegura que el constructor inicializa todos los atributos correctamente
+        self.assertEqual(self.jugador.__nombre__, "Dana")
+        self.assertEqual(self.jugador.__color__, "blanco")
+        self.assertEqual(self.jugador.__fichas__, 15)
+        self.assertEqual(self.jugador.__fichas_restantes__, 15)
+
+    def test_sacar_ficha_con_cero_restantes(self):
+        # Testea la rama de retorno False en sacar_ficha_a_afuera (cubre la línea 'return False' final)
+        self.jugador.__fichas_restantes__ = 0
+        self.assertFalse(self.jugador.sacar_ficha_a_afuera())

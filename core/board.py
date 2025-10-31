@@ -44,7 +44,7 @@ class Tablero:
     def mover_ficha(self,color,desde,hacia):
         # verifica que la posición esté entre 0 y 23
         if desde < 0 or desde > 23 or hacia < 0 or hacia > 23:
-            raise MovimientoInvalidoError("Punto inválido. Debe estar entre 1 y 24.")
+            raise MovimientoInvalidoError("Punto de origen o destino fuera de rango (1-24).")
         # verifica que contenga algo la posición
         if not self.__contenedor__[desde]:
             raise MovimientoInvalidoError(f"No hay fichas en la posición {desde}")

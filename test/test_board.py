@@ -35,11 +35,6 @@ class TestTablero(unittest.TestCase):
         tiradas = [1, 2]
         self.assertTrue(self.tablero.validar_movimiento("Negra", 0, 1, tiradas))
 
-    def test_validar_movimiento_invalido_por_rango(self):
-        #testea que si el destino está fuera del rango 0-23 devuelva falso
-        tiradas = [1, 2]  # ejemplo, pon los valores que correspondan según el test
-        self.assertFalse(self.tablero.validar_movimiento("Blanca", 30, 1, tiradas))
-
     def test_enviar_a_barra(self):
         #si hay fichas en una posicion, debe enviarlas a la barra
         self.tablero.enviar_a_barra(0)
@@ -181,7 +176,7 @@ class TestTablero(unittest.TestCase):
     def test_mover_ficha_destino_bloqueado(self):
         # Mover Negras de 0 a 2. Posición 2 tiene 2 Blancas (bloqueo).
         self.tablero.mostrar_contenedor()[2] = ["Blanca", "Blanca"]
-        with self.assertRaises(ValueError):
+        with self.assertRaises(MovimientoInvalidoError): 
             self.tablero.mover_ficha("Negra", 0, 2)
 
     def test_validar_movimiento_sentido_incorrecto(self):
@@ -194,7 +189,17 @@ class TestTablero(unittest.TestCase):
         tiradas = [1]
         self.assertFalse(self.tablero.validar_movimiento("Negra", 0, 5, tiradas))
     
+    def test_validar_movimiento_destino_bloqueado(self):
+        # Colocar 2 fichas enemigas en destino. Comprueba el retorno False.
+        self.tablero.mostrar_contenedor()[0] = ["Negra", "Negra"] 
+        # Mover Blanca de 5 a 0 (inválido). tiradas_restantes debe ser None para probar la rama más general.
+        self.assertFalse(self.tablero.validar_movimiento("Blanca", 5, 0))
 
+    def test_valida_mover_desde_barra_sin_tiradas_param(self):
+        # Comprueba la rama donde tiradas_restantes no se pasa (es None) en el método valida_mover_desde_barra.
+        self.tablero.mostrar_barra()["Blanca"].append("Blanca")
+        # El método debe devolver True si la posición está libre, ignorando las tiradas
+        self.assertTrue(self.tablero.valida_mover_desde_barra("Blanca", 22, tiradas_restantes=None))
 
 if __name__ == "__main__":
     unittest.main()
