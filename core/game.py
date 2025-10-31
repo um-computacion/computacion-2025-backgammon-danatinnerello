@@ -52,19 +52,49 @@ class Juego:
                 return jugador
         return None
 
-    def valida_mover_ficha(self,jugador:Jugador,desde,hacia,):
+    def valida_mover_ficha(self, jugador:Jugador, desde, hacia,):
         desde_index = desde - 1
         hacia_index = hacia - 1
-        if not self.__tablero__.validar_movimiento(jugador.obtener_color(),desde_index,hacia_index, self.__dados__.obtener_tiradas_restantes()):
-            raise MovimientoInvalidoError("Movimiento inválido")
-        diferencia= abs(hacia_index - desde_index)
-        if not self.__dados__.usar_tirada(diferencia):
-            raise MovimientoInvalidoError("Ese dado no está disponible")
+        color = jugador.obtener_color()
+
+        # Validación de destino abierto 
+        if not self.__tablero__.validar_movimiento(color, desde_index, hacia_index):
+            raise MovimientoInvalidoError("Movimiento o destino inválido (destino bloqueado o dirección incorrecta)")
+
+        try:
+            # ENCONTRAR QUÉ DADO(S) USAR Y VALIDAR PASOS INTERMEDIOS
+            dado_principal, dado_secundario = self._encontrar_dado_y_tipo_movimiento(jugador, desde_index, hacia_index)
+        except MovimientoInvalidoError as e:
+            raise MovimientoInvalidoError(f"Movimiento inválido: {e}")
+
+        dados_consumidos = []
         
-        self.__tablero__.mover_ficha(jugador.obtener_color(),desde_index,hacia_index)
+        if dado_secundario is None:
+            # CONSUMIR UN SOLO DADO (Movimiento Simple)
+            if not self.__dados__.usar_tirada(dado_principal):
+                raise MovimientoInvalidoError(f"Error al consumir el dado {dado_principal}. El dado ya no está disponible.")
+            dados_consumidos = [dado_principal]
+        else:
+            # CONSUMIR DOS DADOS (Movimiento Compuesto)
+            # Consumimos ambos dados y revertimos si el segundo falla.
+            if not self.__dados__.usar_tirada(dado_principal):
+                raise MovimientoInvalidoError(f"No se pudo usar el primer dado ({dado_principal}).")
+            
+            if not self.__dados__.usar_tirada(dado_secundario):
+                # Reversión de la tirada anterior para mantener el estado
+                self.__dados__.usar_tirada(dado_principal, revertir=True)
+                raise MovimientoInvalidoError(f"No se pudo usar el segundo dado ({dado_secundario}).")
+            
+            dados_consumidos = [dado_principal, dado_secundario]
+
+        #Aplicar movimiento en el tablero
+        captura = self.__tablero__.mover_ficha(color, desde_index, hacia_index)
+        
         # si ya no quedan tiradas, cambiar turno
         if not self.__dados__.obtener_tiradas_restantes():
             self.controlar_turnos()
+
+        return captura, dados_consumidos #Ahora devuelve una tupla
 
     def valida_sacar_ficha(self, jugador: Jugador, desde):
         desde_index = desde - 1
@@ -86,22 +116,30 @@ class Juego:
             # comprobar si hay fichas más lejos (más hacia el punto 24)
             hay_mas_lejanas = any(tablero.mostrar_contenedor()[i] for i in range(desde_index + 1, 24))
 
-        # Caso 1: hay un dado exacto → usarlo directamente
+        # hay un dado exacto → usarlo directamente
         if distancia in tiradas:
             self.__dados__.usar_tirada(distancia)
-            if not tablero.sacar_ficha(color, desde_index):  # <-- Agregamos el chequeo del resultado
+            if not tablero.sacar_ficha(color, desde_index):  # chequeo del resultado
                 raise SacarFichaError("No se pudo sacar ficha. Fallo interno del tablero.") 
             jugador.sacar_ficha_a_afuera()
+            
+            if not self.__dados__.obtener_tiradas_restantes():
+                self.controlar_turnos()
+                
             return distancia
 
-        # Caso 2: dado mayor → permitido si NO hay fichas más lejanas
+        # dado mayor → permitido si NO hay fichas más lejanas
         if not hay_mas_lejanas:
             dado_mayor = next((d for d in sorted(tiradas) if d > distancia), None)
             if dado_mayor:
                 self.__dados__.usar_tirada(dado_mayor)
-                if not tablero.sacar_ficha(color, desde_index): # <-- Agregamos el chequeo del resultado
+                if not tablero.sacar_ficha(color, desde_index): #chequeo del resultado
                     raise SacarFichaError("No se pudo sacar ficha. Fallo interno del tablero.")
                 jugador.sacar_ficha_a_afuera()
+                
+                if not self.__dados__.obtener_tiradas_restantes():
+                    self.controlar_turnos()
+                    
                 return dado_mayor
         # VÉA el caso donde el dado es mayor PERO hay fichas más lejanas
         elif hay_mas_lejanas:
@@ -173,3 +211,51 @@ class Juego:
                     if tablero.validar_movimiento(color, desde, hacia, tiradas):
                         return True
         return False
+
+    def _encontrar_dado_y_tipo_movimiento(self, jugador, desde_index, hacia_index):
+        """
+        Busca si el movimiento (desde -> hacia) es válido con las tiradas disponibles,
+        validando también el punto intermedio.
+        Retorna: (dado_principal, dado_secundario_o_None).
+        """
+        color = jugador.obtener_color()
+        tiradas = self.__dados__.obtener_tiradas_restantes()
+        diferencia = abs(hacia_index - desde_index)
+        
+        # Movimiento Simple (usa un solo dado)
+        if diferencia in tiradas:
+            return (diferencia, None)
+
+        # Movimiento Compuesto (usa dos dados: D1 + D2 = Diferencia)
+        tiradas_copia = list(tiradas) # Necesaria para manejar dobles y tiradas simples
+        
+        for i, dado1 in enumerate(tiradas):
+            dado2 = diferencia - dado1
+            
+            #Chequear si el segundo dado está disponible (debe ser diferente al índice 'i' si es tirada simple)
+            if dado2 > 0:
+                
+                # Crear una lista de tiradas restantes excluyendo el primer dado 'dado1' en el índice 'i'
+                tiradas_restantes_para_d2 = tiradas_copia[:i] + tiradas_copia[i+1:]
+                
+                if dado2 in tiradas_restantes_para_d2:
+                    
+                    # Calcular el índice intermedio después de mover el primer dado (dado1)
+                    if color == "Blanca":
+                        intermedio = desde_index - dado1
+                    else: # Negra
+                        intermedio = desde_index + dado1
+                    
+                    # Verificar si el punto intermedio está bloqueado (2 o más fichas enemigas)
+                    destino_intermedio = self.__tablero__.mostrar_contenedor()[intermedio]
+                    if len(destino_intermedio) >= 2 and destino_intermedio[0] != color:
+                        # El paso está bloqueado. Probar otra combinación.
+                        continue
+                    
+                    # ¡Movimiento Compuesto Válido!
+                    # Devolvemos el par de dados (ordenados para consumo consistente)
+                    dados = sorted([dado1, dado2], reverse=True)
+                    return (dados[0], dados[1])
+                
+        # Si no se encontró ninguna combinación válida (ni simple ni compuesta)
+        raise MovimientoInvalidoError("La distancia no coincide con las tiradas disponibles, o el punto intermedio está bloqueado.")

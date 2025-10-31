@@ -13,16 +13,16 @@ from core.excepcions import (
 
 '''
 menu:
-     inicializar juego
-     inicilizar jugadores
-     inicializar tablero
-     inicializar dados
+inicializar juego
+inicilizar jugadores
+inicializar tablero
+inicializar dados
 gestionar turnos
 verificar tiradas
 verificar posiciones 
 verificar ganador 
 
-'''                #    añadir validaciones
+'''              
 
 
 def pedir_int(mensaje: str) -> int:
@@ -59,17 +59,23 @@ def main():
                     destino= pedir_int("Hasta: ")
 
                     if origen== 0:  # desde barra
-                        juego.valida_mover_desde_barra(jugador,destino)
-                        print(f"Ficha movida desde la barra a {destino}")
+                        captura = juego.valida_mover_desde_barra(jugador,destino) # <-- Asignamos el valor de captura
+                        if captura:
+                            print(f"Ficha movida desde la barra a {destino}. ¡Captura!")
+                        else:
+                            print(f"Ficha movida desde la barra a {destino}")
                     elif destino== -1:  # sacar ficha
                         juego.valida_sacar_ficha(jugador,origen)
                         print(f"Ficha sacada desde {origen}")
                     else:  # movimiento normal
-                        captura = juego.valida_mover_ficha(jugador, origen, destino)
+                        captura, dados_usados = juego.valida_mover_ficha(jugador, origen, destino) # <-- CAMBIO ACEPTANDO 2 VALORES
+                        
+                        dados_str = " y ".join(map(str, sorted(dados_usados, reverse=True)))
+                        
                         if captura:
-                            print("Capturaste una ficha enemiga")
+                            print(f"Capturaste una ficha enemiga (Usaste: {dados_str})")
                         else:
-                            print(f"Ficha movida de {origen} a {destino}")
+                            print(f"Ficha movida de {origen} a {destino} (Usaste: {dados_str})")
 
                 elif opcion== 2:
                     raise RendicionError
@@ -83,8 +89,6 @@ def main():
                 if ganador:
                     print(f"Ganoo {ganador.obtener_nombre()} ({ganador.obtener_color()})")
                     return
-                
-                juego.controlar_turnos()  #cambia turno
 
             except (EntradaInvalidaError, MovimientoInvalidoError, SacarFichaError) as e:
                 print(f"Error: {e}")
