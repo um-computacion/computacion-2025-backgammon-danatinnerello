@@ -10,7 +10,8 @@ Responsabilidad:
 
 import pygame
 from pygame_ui.board_renderer import TableroGrafico, estado_desde_board
-from core.game import Juego, Jugador
+from core.game import Juego
+from core.player import Jugador
 from pygame_ui.events import ManejadorEventos # Importar el nuevo manejador
 
 pygame.init()
@@ -105,14 +106,15 @@ def dibujar_panel_inferior(pantalla, juego, mensaje=""):
         pantalla.blit(mensaje_texto, (30, ALTO_TABLERO + 60))
 
 
-def dibujar_todo(pantalla, renderer, juego, mensaje=""):
+def dibujar_todo(pantalla, renderer, juego, mensaje_ui=""):
     pantalla.fill(COLOR_FONDO)
     renderer.dibujar_tablero()
     estado = estado_desde_board(juego.mostrar_tablero())
     renderer.dibujar_fichas(estado)
     renderer.dibujar_barra(juego.mostrar_tablero())
     renderer.dibujar_barra_lateral(juego.mostrar_tablero())
-    dibujar_panel_inferior(pantalla, juego, mensaje)
+    dibujar_panel_inferior(pantalla, juego, mensaje_ui)
+    pygame.display.flip() # Asegurar que la pantalla se actualiza
 
 
 def main():
@@ -123,7 +125,7 @@ def main():
     jugador1 = Jugador(nombre1, "Blanca")
     jugador2 = Jugador(nombre2, "Negra")
     juego = Juego(jugador1, jugador2)
-    juego.__dados__.tirar_dados()  # primera tirada (inicia el juego)
+    juego.__dados__.tirar_dados()  # Primera tirada (inicia el juego)
 
     pantalla = pygame.display.set_mode((ANCHO_PANTALLA, ALTO_PANTALLA))
     pygame.display.set_caption("Backgammon - Pygame")
@@ -131,19 +133,34 @@ def main():
     renderer = TableroGrafico(pantalla, alto_tablero=ALTO_TABLERO)
     reloj = pygame.time.Clock()
     
-    #Crear la instancia del manejador de eventos
+    # Crear la instancia del manejador de eventos
     manejador = ManejadorEventos(juego, renderer)
+    
+    # Mensaje inicial con la primera tirada
+    manejador._actualizar_mensaje(
+        f"Turno de {juego.mostrar_turno().obtener_nombre()} - Tira: {juego.__dados__.obtener_tiradas_restantes()}", 
+        2500
+    )
 
     running = True
     while running:
         dt = reloj.tick(30)
-
-        # Si no hay tiradas disponibles al inicio del loop -> tirar para el turno actual
-        if not juego.__dados__.obtener_tiradas_restantes():
+        
+        if manejador.ganador is not None:
+            # Comprueba si han pasado 5 segundos (5000 ms) desde que se declaró el ganador
+            tiempo_actual = pygame.time.get_ticks()
+            if tiempo_actual - manejador.tiempo_fin_juego > manejador.duracion_mensaje_final:
+                running = False # Detiene el bucle principal y cierra el juego
+                continue # Saltar el resto del bucle
+       
+        # Tira nuevos dados solo si los anteriores están agotados Y el juego NO ha terminado.
+        if not juego.__dados__.obtener_tiradas_restantes() and manejador.ganador is None:
+            jugador_actual = juego.mostrar_turno()
             juego.__dados__.tirar_dados()
+            
             manejador._actualizar_mensaje(
-                f"Turno de {juego.mostrar_turno().obtener_nombre()} ({juego.mostrar_turno().obtener_color()})", 
-                1200
+                f"Turno de {jugador_actual.obtener_nombre()} - Tira: {juego.__dados__.obtener_tiradas_restantes()}",
+                2500 # Mostrar por 2.5 segundos
             )
 
         # Llamar al manejador de eventos
@@ -151,9 +168,8 @@ def main():
         running = manejador.running
         
         # Dibujar con el estado actual del manejador
-        dibujar_todo(pantalla, renderer, juego, manejador.mensaje)
-        pygame.display.flip()
-
+        dibujar_todo(pantalla, renderer, juego, manejador.mensaje_ui)
+        
     pygame.quit()
 
 
@@ -161,7 +177,6 @@ if __name__ == "__main__":
     main()
 
 #me falta:
-#despues ver si me falta algo comparado con el cli
 #añadir validaciones
 #completar documentacionn
 #pulir detalles

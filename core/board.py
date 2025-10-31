@@ -1,7 +1,5 @@
 from core.excepcions import MovimientoInvalidoError 
 
-
-
 '''Responsabilidades:
 
 -saber que fichas estan en cada punto
@@ -9,7 +7,6 @@ from core.excepcions import MovimientoInvalidoError
 -guardar movimiento
 
 '''
-
 
 class Tablero:
     def __init__(self):
@@ -58,7 +55,7 @@ class Tablero:
         #guarda ficha
         destino= self.__contenedor__[hacia]
         if len(destino) >= 2 and destino[0] != color:
-            raise ValueError("Destino bloqueado por fichas enemigas")
+            raise MovimientoInvalidoError("Destino bloqueado por fichas enemigas")
       
         #elimina la ficha
         ficha= self.__contenedor__[desde].pop()
@@ -73,7 +70,7 @@ class Tablero:
         destino.append(ficha)
         return captura
 
-    def validar_movimiento(self, color, desde, hacia, tiradas_restantes):
+    def validar_movimiento(self, color, desde, hacia, tiradas_restantes=None): 
         # Verifica si el movimiento está en el rango
         if hacia < 0 or hacia > 23 or desde < 0 or desde > 23:
             return False
@@ -83,23 +80,20 @@ class Tablero:
         # Verifica si la ficha a mover es del color correcto
         if self.__contenedor__[desde][-1] != color:
             return False
-        # Verifica si el destino está bloqueado por 2 o más fichas enemigas
-        destino = self.__contenedor__[hacia]
-        if len(destino) >= 2 and destino[0] != color:
-            return False
-        # Verifica si el movimiento corresponde a alguna tirada disponible
-        # validacion de direccion
+            
+        # Verifica la dirección (Blanca de 23->0, Negra de 0->23)
         if color == "Blanca" and hacia >= desde:
             return False
         if color == "Negra" and hacia <= desde:
             return False
-        
-        diferencia = abs(hacia - desde)
-
-        if diferencia not in tiradas_restantes:
+            
+        # Verifica si el destino está bloqueado por 2 o más fichas enemigas
+        destino = self.__contenedor__[hacia]
+        if len(destino) >= 2 and destino[0] != color:
             return False
-        return True
 
+        return True
+    
     def enviar_a_barra(self, posicion):
         # Si hay fichas en la posición, saca la última y la agrega a la barra correspondiente
         if self.__contenedor__[posicion]:
