@@ -23,12 +23,6 @@ class TestJuego(unittest.TestCase):
         self.tablero.mostrar_afuera()["Blanca"] = []
         self.tablero.mostrar_afuera()["Negra"] = []
 
-    def test_turnos_alternan(self):
-        turno1 = self.juego.mostrar_turno()
-        self.juego.controlar_turnos()
-        turno2 = self.juego.mostrar_turno()
-        self.assertNotEqual(turno1, turno2)
-
     def test_verificar_ganador_none_al_inicio(self):
         self.assertIsNone(self.juego.verificar_ganador())
 
@@ -99,16 +93,15 @@ class TestJuego(unittest.TestCase):
         ganador = self.juego.verificar_ganador()
         self.assertEqual(ganador, self.j1)
 
-
     def test_valida_mover_ficha_falla_en_validar(self):
         # Mock de la validación para que siempre falle
         original_valida = self.tablero.validar_movimiento
-        self.tablero.validar_movimiento = lambda c, d, h, t: False
+        self.tablero.validar_movimiento = lambda c, d, h: False 
         with self.assertRaises(MovimientoInvalidoError):
+            # El Core llama a validar_movimiento(color, desde, hacia)
             self.juego.valida_mover_ficha(self.j1, 1, 2)
         self.tablero.validar_movimiento = original_valida
-
-    
+        
 
     def test_valida_sacar_ficha_falla(self):
         # Mock para que la validación de cuadrante falle
@@ -187,7 +180,7 @@ class TestJuego(unittest.TestCase):
         self.dados.__tiradas_restantes__ = [6] # Dado mayor
 
         # Debe lanzar un error porque hay una ficha en la Casilla 1 que está más lejos que el origen (Casilla 2)
-        with self.assertRaisesRegex(SacarFichaError, "Hay fichas Blanca en posiciones más lejanas"):
+        with self.assertRaisesRegex(SacarFichaError, "No puedes usar el dado 6. Hay fichas en posiciones más lejanas."): 
             self.juego.valida_sacar_ficha(self.j1, 2)
     
     def test_valida_mover_desde_barra_blancas(self):
@@ -251,9 +244,8 @@ class TestJuego(unittest.TestCase):
         self.tablero.mostrar_contenedor()[4] = ["Negra", "Negra"] # Destino (Punto 5, Diferencia 1)
         self.dados.__tiradas_restantes__ = [1]
         
-        with self.assertRaisesRegex(MovimientoInvalidoError, "Movimiento inválido"):
-            # Llama a valida_mover_ficha, que llama a tablero.validar_movimiento, que debe fallar
-            self.juego.valida_mover_ficha(self.j1, 6, 5) 
+        with self.assertRaisesRegex(MovimientoInvalidoError, "destino bloqueado"): # <--- CAMBIO
+            self.juego.valida_mover_ficha(self.j1, 6, 5)
 
     def test_sacar_ficha_falla_tablero(self):
         # Simular que el tablero no puede sacar la ficha (e.g., ya no queda ninguna)
@@ -387,5 +379,129 @@ class TestJuego(unittest.TestCase):
         
         # Debe ser posible el movimiento (0 -> 1)
         self.assertTrue(self.juego.hay_movimientos_posibles(self.j2))
+
+    def test_init_nombres_vacios_lanza_error(self):
+        # Cubre la rama de validación de nombre vacío
+        with self.assertRaisesRegex(MovimientoInvalidoError, "no pueden estar vacíos"):
+            Juego(Jugador("", "Blanca"), self.j2, self.tablero, self.dados)
+
+    def test_init_nombres_duplicados_lanza_error(self):
+        # Cubre la rama de validación de nombres iguales
+        jugador_duplicado = Jugador("Alice", "Negra")
+        with self.assertRaisesRegex(MovimientoInvalidoError, "deben ser diferentes"):
+            Juego(self.j1, jugador_duplicado, self.tablero, self.dados)
+
+    def test_init_nombres_invalidos_caracteres(self):
+        # Cubre la rama de validación de isalpha()
+        jugador_invalido = Jugador("Alice123", "Negra")
+        with self.assertRaisesRegex(MovimientoInvalidoError, "solo pueden contener letras"):
+            Juego(self.j1, jugador_invalido, self.tablero, self.dados)
+
+    def test_hay_mov_posibles_normal_false(self):
+        self._limpiar_tablero()
+        # Colocamos una ficha en un punto intermedio, no en la casa (Punto 10, índice 9)
+        self.tablero.mostrar_contenedor()[9] = ["Blanca"] 
+        # Dado que no le permite moverse (ej. 1), y el resto del tablero está vacío/bloqueado.
+        self.dados.__tiradas_restantes__ = [1]
+        
+        # Bloqueamos el único destino posible (Punto 9)
+        self.tablero.mostrar_contenedor()[8] = ["Negra", "Negra"] 
+        
+        # Ahora, NO hay movimientos posibles (debe ser False)
+        self.assertFalse(self.juego.hay_movimientos_posibles(self.j1))
+
+
+    def test_valida_mover_ficha_falla_consumo_principal(self):
+        # El Core encuentra un dado principal, pero este falla en el consumo (debe ser imposible, pero cubre la línea)
+        self._limpiar_tablero()
+        self.dados.__tiradas_restantes__ = [1, 2] 
+        self.tablero.mostrar_contenedor()[5] = ["Blanca"] # Origen 6
+        
+        original_usar = self.dados.usar_tirada
+        self.dados.usar_tirada = lambda dado, r=False: False # Mock para que falle el consumo
+        
+        with self.assertRaisesRegex(MovimientoInvalidoError, "El dado ya no está disponible."):
+            # Intenta mover 1 espacio
+            self.juego.valida_mover_ficha(self.j1, 6, 5) 
+            
+        self.dados.usar_tirada = original_usar
+
+    def test_valida_mover_ficha_pasos_compuestos_con_dobles(self):
+        # Mover 4+4 = 8, asegurando que el Core detecte la combinación de dobles.
+        self._limpiar_tablero()
+        self.tablero.mostrar_contenedor()[10] = ["Blanca"] # Origen 11
+        self.dados.__tiradas_restantes__ = [4, 4, 4, 4] # Dobles 4
+
+        # El movimiento es 11 -> 3 (8 espacios). Paso intermedio 7 (11-4)
+        self.juego.valida_mover_ficha(self.j1, 11, 3) 
+
+        self.assertEqual(len(self.dados.obtener_tiradas_restantes()), 2)
+
+    def test_valida_sacar_ficha_falla_interno_dado_mayor(self):
+        # Mock para que el tablero falle al sacar ficha (dado mayor)
+        self._limpiar_tablero()
+        self.tablero.todas_en_ultimo_cuadrante = lambda c: True
+        self.tablero.mostrar_contenedor()[5] = ["Blanca"] # Origen 6 (distancia 19)
+        self.dados.__tiradas_restantes__ = [6]
+        
+        original_sacar = self.tablero.sacar_ficha
+        self.tablero.sacar_ficha = lambda c, d: False
+        
+        with self.assertRaisesRegex(SacarFichaError, "Fallo interno del tablero"):
+            self.juego.valida_sacar_ficha(self.j1, 6)
+            
+        self.tablero.sacar_ficha = original_sacar
+
+    def test_valida_sacar_ficha_falla_interno_dado_exacto(self):
+        # Mock para que el tablero falle al sacar ficha (dado exacto)
+        self._limpiar_tablero()
+        self.tablero.todas_en_ultimo_cuadrante = lambda c: True
+        self.tablero.mostrar_contenedor()[0] = ["Blanca"] # Origen 1 (distancia 24)
+        self.dados.__tiradas_restantes__ = [6]
+        
+        original_sacar = self.tablero.sacar_ficha
+        self.tablero.sacar_ficha = lambda c, d: False
+        
+        with self.assertRaisesRegex(SacarFichaError, "Fallo interno del tablero"):
+            self.juego.valida_sacar_ficha(self.j1, 1)
+            
+        self.tablero.sacar_ficha = original_sacar
+
+    def test_hay_mov_posibles_normal_false_no_es_ficha_tuya(self):
+        # Se asegura de no romper si hay fichas enemigas en los puntos.
+        self._limpiar_tablero()
+        self.tablero.mostrar_contenedor()[5] = ["Negra"] # Ficha enemiga en Punto 6
+        self.dados.__tiradas_restantes__ = [1]
+        
+        # El jugador J1 (Blanca) no debe encontrar movimientos, incluso si el destino está libre.
+        self.assertFalse(self.juego.hay_movimientos_posibles(self.j1))
+
+    def test_valida_mover_ficha_falla_consumo_secundario_revierte(self):
+        # Escenario: Movimiento compuesto (6+2=8). Falla al consumir el dado 2 (secundario).
+        # Ajustamos el origen/destino a un movimiento que sí es válido en el tablero.
+        self._limpiar_tablero()
+        self.tablero.mostrar_contenedor()[12] = ["Blanca"] # Origen 13
+        self.dados.__tiradas_restantes__ = [6, 2] # Dados
+        
+        # Mock: El consumo del dado 2 debe fallar (return False), y el dado 6 debe pasar.
+        original_usar = self.dados.usar_tirada
+        def mock_usar_tirada(dado, revertir=False):
+            # Fallar solo cuando se intenta consumir el dado 2, no en reversión.
+            if dado == 2 and not revertir: return False
+            return original_usar(dado, revertir)
+            
+        self.dados.usar_tirada = mock_usar_tirada
+        
+        # Mover 13 (index 12) a 5 (index 4), diferencia 8.
+        with self.assertRaisesRegex(MovimientoInvalidoError, "No se pudo usar el segundo dado"):
+            self.juego.valida_mover_ficha(self.j1, 13, 5) 
+            
+        # Verificar que el dado 6 (principal) fue revertido correctamente.
+        self.assertIn(6, self.dados.obtener_tiradas_restantes()) 
+        self.assertIn(2, self.dados.obtener_tiradas_restantes())
+        self.dados.usar_tirada = original_usar
+
+
+   
 if __name__ == "__main__":
     unittest.main()

@@ -22,7 +22,7 @@ verificar tiradas
 verificar posiciones 
 verificar ganador 
 
-'''              
+'''                
 
 
 def pedir_int(mensaje: str) -> int:
@@ -33,42 +33,64 @@ def pedir_int(mensaje: str) -> int:
 
 def main():
     print("Bienvenidos al juego Backgammon")
-    nombre1= input("Jugador 1 (Blanca): ")
-    nombre2= input("Jugador 2 (Negra): ")
-    jugador1= Jugador(nombre1, "Blanca")
-    jugador2= Jugador(nombre2, "Negra")
-    juego= Juego(jugador1, jugador2)
+    
+    while True:
+        try:
+            nombre1 = input("Jugador 1 (Blanca): ")
+            nombre2 = input("Jugador 2 (Negra): ")
+            
+            jugador1 = Jugador(nombre1, "Blanca")
+            jugador2 = Jugador(nombre2, "Negra")
+            juego = Juego(jugador1, jugador2)
+            
+            break 
+            
+        except MovimientoInvalidoError as e:
+            print(f"\n¡Error de Jugador! {e}")
+            print("Por favor, ingrese los nombres nuevamente.\n")
+            # El bucle se repite automáticamente.
+    
     while not juego.mostrar_juego_terminado():
         jugador = juego.mostrar_turno()
         print(f"Turno de {jugador.obtener_nombre()} ({jugador.obtener_color()})")
+        
+        # Tirada de dados
         tirada = juego.__dados__.tirar_dados()
         print("Tirada:", tirada)
+        
+        # Bucle de movimientos con los dados disponibles
         while juego.__dados__.quedan_tiradas():
             try:
-                tablero= juego.__tablero__.mostrar_estado()
-                print(tablero)
-                print(f"Turno de {jugador.obtener_nombre()} ({jugador.obtener_color()})")
-                print("Tirada:", tirada)
-                print("1:Mover ficha")
-                print("2:Rendirse")
-                print("3:Finalizar juego")
-                opcion= pedir_int("Opcion: ")
+                tablero= juego.__tablero__
+                print(tablero.mostrar_estado())
+                print(f"Tiradas restantes: {juego.__dados__.obtener_tiradas_restantes()}")
+                
+                print("Opciones:")
+                print("1. Mover ficha")
+                print("2. Rendirse")
+                print("3. Finalizar juego")
+                
+                opcion= pedir_int("Seleccione una opcion: ")
 
                 if opcion== 1:
                     origen= pedir_int("Mover ficha desde: ")
                     destino= pedir_int("Hasta: ")
 
-                    if origen== 0:  # desde barra
-                        captura = juego.valida_mover_desde_barra(jugador,destino) # <-- Asignamos el valor de captura
+                    if origen== 0:  # desde barra (Reingreso)
+                        # *Asegurarse de usar la variable 'captura' para el mensaje*
+                        captura = juego.valida_mover_desde_barra(jugador, destino)
                         if captura:
                             print(f"Ficha movida desde la barra a {destino}. ¡Captura!")
                         else:
                             print(f"Ficha movida desde la barra a {destino}")
+                            
                     elif destino== -1:  # sacar ficha
                         juego.valida_sacar_ficha(jugador,origen)
                         print(f"Ficha sacada desde {origen}")
+                        
                     else:  # movimiento normal
-                        captura, dados_usados = juego.valida_mover_ficha(jugador, origen, destino) # <-- CAMBIO ACEPTANDO 2 VALORES
+                        # *Asegurarse de aceptar los dos valores de retorno*
+                        captura, dados_usados = juego.valida_mover_ficha(jugador, origen, destino) 
                         
                         dados_str = " y ".join(map(str, sorted(dados_usados, reverse=True)))
                         
@@ -98,6 +120,6 @@ def main():
             except JuegoTerminadoError:
                 print("Juego finalizado por el usuario")
                 return
-        
+    
 if __name__ == "__main__":
     main()
