@@ -192,3 +192,78 @@ Cada uno dura 2 semanas (coincide con los sprints que pide la materia):
 - Uso de la salida: No usada
 
 - Referencia en archivos finales: Ninguno
+
+### Prompt 3
+
+- Modelo / herramienta usada: ChatGPT GPT-5 (Agosto 2025)
+
+- Instrucciones del sistema: (Ninguna especial, salvo configuración por defecto de ChatGPT)
+
+- Prompt exacto usado: " ![alt text](image-2.png) Qué significa eso "
+- Respuesta completa de la IA: 
+
+Lo que ves en la pantalla es un Pull Request en GitHub que intenta unir (mergear) tu rama 54-modificaciones... a la rama main.
+
+El mensaje:
+
+"This branch has conflicts that must be resolved"
+
+significa que los cambios que hiciste en tu rama entran en conflicto con lo que ya existe en main.
+Es decir, Git no sabe automáticamente cómo combinar ambos porque hay diferencias en los mismos archivos/líneas.
+
+En tu caso, el conflicto aparece en el archivo .coverage, que es un archivo generado automáticamente por la herramienta de coverage (cuando corrés tests). Ese archivo no debería subirse al repositorio, porque cambia en cada ejecución de los tests. Lo ideal es que esté listado en el archivo .gitignore.
+
+Opciones para resolverlo:
+
+La forma rápida (recomendada):
+
+Eliminá .coverage del control de versiones y agregalo a .gitignore.
+
+Para eso:
+echo ".coverage" >> .gitignore
+git rm --cached .coverage
+git add .gitignore
+git commit -m "Ignorar archivo .coverage"
+git push
+Luego resolvés el merge normalmente.
+
+Si querés resolverlo desde GitHub:
+
+Podés hacer clic en "Resolve conflicts", abrir el archivo en conflicto y elegir si lo eliminás o dejás uno de los dos.
+
+En este caso lo mejor es eliminarlo directamente, porque no tiene sentido mantener .coverage en el repo.
+
+👉 En resumen:
+Ese aviso significa que no podés hacer el merge hasta que resuelvas manualmente los conflictos. En tu caso el conflicto está en un archivo que no debería estar en el repositorio, así que lo mejor es borrarlo y añadirlo al .gitignore.
+
+- Uso de la salida: Usada 
+- Referencia en archivos finales: 
+
+### Prompt 4
+
+- Modelo / herramienta usada: ChatGPT GPT-5 (Agosto 2025)
+
+- Instrucciones del sistema: (Ninguna especial, salvo configuración por defecto de ChatGPT)
+
+- Prompt exacto usado: " que es el docker en informatica?  "
+- Respuesta completa de la IA: 
+Docker es una plataforma que permite crear, ejecutar y administrar aplicaciones dentro de “contenedores”.
+En términos simples, un contenedor es como una pequeña “caja” que incluye todo lo necesario para que una aplicación funcione: su código, librerías, dependencias, y configuraciones.
+
+🔹 ¿Por qué se usa Docker?
+
+Sin Docker, una aplicación puede funcionar en tu computadora pero fallar en otro entorno (por ejemplo, en un servidor), porque faltan librerías o hay versiones distintas.
+Con Docker, la aplicación se ejecuta igual en cualquier lugar, ya sea en tu PC, en otro sistema operativo, o en la nube.
+- Uso de la salida: Usada con modificaciones
+    Modificaciones realizadas: Cambié los nombres de atributos al español (players → jugadores, board → tablero).
+🔹 Conceptos clave
+
+Imagen (image): una “plantilla” inmutable que define el entorno de la app (por ejemplo, una imagen de Python con tu código incluido).
+
+Contenedor (container): una instancia en ejecución de una imagen.
+
+Dockerfile: archivo de texto donde definís cómo construir la imagen (qué sistema base usar, qué librerías instalar, etc.).
+
+Docker Hub: repositorio en línea donde podés encontrar o publicar imágenes.
+
+- Referencia en archivos finales: core/game.py, core/board.py

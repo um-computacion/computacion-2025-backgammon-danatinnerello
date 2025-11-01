@@ -4,19 +4,7 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0/)  
 y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 
-## [Unreleased]
-### Agregado
-- (Cosas nuevas que todavía no salieron en una versión estable)
-
-### Cambiado
-- (Cambios que aún no se liberaron)
-
-### Corregido
-- (Errores solucionados en desarrollo)
-
----
-
-## [1.0.0] - 2025-08-20 - Sprint 1
+## [1.0.0] - Comienzo: 2025-08-20 - Sprint 1
 ### Agregado
 - Creacion de la estructura del juego: carpetas y archivos de tablero y juego
 
@@ -75,10 +63,10 @@ y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Eliminado
 - 
-
+# Terminacion: 2025-09-02
 ---
 
-## [1.1.0] - 2025-09-03 -  Sprint 2 
+## [2.0.0] - Comienzo: 2025-09-03 -  Sprint 2 
 ### Agregado
 - Implementacion de integracion continua: pylint
 - Descarga de librerias requeridas
@@ -114,8 +102,9 @@ y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Emilinado
 
+# Terminacion: 2025-09-16
 
-## [1.1.1] - 2025-09-03 -  Sprint 3
+## [3.0.0] - Comienzo: 2025-09-17 -  Sprint 3
 
 # Agregado
 
@@ -141,6 +130,10 @@ y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 - Añadi validaciones de direccion ya que depende la ficha van en direcciones contrarias
 - Añadi test para llegar a la cobertura en board y en game
 
+- En el cli añadi para que siempre que en el bucle siempre muestre el tablero, tirada de daods y turno
+- Agregacion de test de game
+
+- Desarrollo de README
 
 # Modificado
 - Modificacion de algunos test devido a la implementacion del interactive
@@ -158,8 +151,6 @@ y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 - Luego de la clase con el profe daniel me di cuenta que mi codigo por partes no cumplia con los principios SOLID netonces realice modificaciones.
 - Añadi una validacion para que capture si no tiene movimientos el jugador.(en el cli) 
 - Saque validaciones y solo llame metodos de las clases.
-
-
 
 # Corregido
 
@@ -183,8 +174,154 @@ y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 
 - Corregi algunos test en board con mis excepciones personalizadas
 
+- Correccion de indice en el metodo "valida_mover_ficha" en game
+- Correcion de indice en varios metodos. para que el usuario vea 1-24 pero en la logica funciona de 0-23
+
+- Actualizacion de el archivo JUSTIFICACION
+
 
 # Emilinado
 
 - Elimine metodos de player que no servian o no los utlizaba
 - Elimine todo el cli anterior donde tenia logica e interaccion mezcladas y tambien habia agregado el interactive
+
+# Terminacion: 2025-09-30
+
+## [4.0.0] - Comienzo: 2025-10-01 - Sprint 4 
+
+# Agregado
+
+- Creacion de la estructura del pygame y division de respnsabilidades
+- Iniciacion de la pantalla y fondo del tablero
+
+- Comienzo del board_renderer y dibujo de puntos en el tablero
+
+- Dibujo de fichas e integracion en el main
+- Inicializacion de la posicion de las fichas ne le tablero
+
+- Agrego barras laterales y central
+
+- Agrego numero a los puntos 
+
+- Integracion de la logica del juego con la intefaz grafica
+
+- Agregacion de metood para la deteccion del clics en un punto e integracion en el main
+
+- Agregue que al tocar una ficha se dtecte el color de la misma
+- DEsarrollo de pantalla para que pida a los nombres de los jugadores antes de empezar a jugar
+- Inicializacion de jugadores y juego 
+- Desarrollo de movimiento basico 
+- Redibuja tablero y cambia turno 
+
+- Desarrollo de metodo dibujar dados e implementacion de tirar dados en main
+
+- Deteccion de clics para mover ficha segun el valor de los dados
+- Desarrollo de deteccion de fichas enemigas
+
+# Modificado 
+- Cambio en el atributo jugador en el game a nombre_jugador
+
+- Modificacion en el orden de los puntos
+
+# Corregido
+
+- Correccion de tamaño de puntos
+
+- Corregido devuelta los puntos para que se vea bien con la barra
+
+- Correciond etamaña de barras para que coincidan con los puntos y se vea bien
+
+- Integracion de que muestre el nombre del juagdor al que le toca jugar
+
+# Eliminado 
+-
+# Terminacion: 2025-10-14
+
+## [5.0.0] - Comienzo: 2025-10-15 - Sprint 5
+
+# Agregado
+
+- Validacion de movimiento
+- Redibuja el tablero para mantenerlo actualizado
+
+- Añadi constantes
+- Agreagcion de un panel al final del tablero donde se muestren los mensajes iterativos para el usuario
+- Configuracion de fuente, tamaño  y tiempo en pantalla de los mensajes 
+
+- Añadi la configuracion para tirar dados con enter
+- Chequeo si no hay movimientos, pasa de turno
+- Añadi metodo para dibujar todo y llamarlo al final del bucle como actualizacion
+
+- Integracion de movimientos a la barra central cuando se captura una ficha
+- Integracion de validacion de esos movimientos y mensajes para el usuario
+
+- Separacion de fichas en la barra segun el color y si hay mas de tres muestra el numero de excedentes
+- Integraciion de movimiento y validacion cuando hay fichas en barra y como deben volver al tablero
+
+- Integracion de que en los puntos, dibuja hasta 5 fichas y despues muestra el numero de las que sobran
+
+- Integracion de la barra lateral donde las fichas ya salen afuera
+- Metodo de pasar turno cuando es necesario porque no hay movimientos en el ultimo cuadrante
+- Integracion de clics en la barra lateral y verificaciones de que todas esten en el ultimo cuadrante
+- Mensajes iterativos para el usuario
+- Control de turnos y manejo d eturnos ya en el ultimo cuadrante
+
+- Añado metodo para saber el color de la ficha que se ingreso a la barra
+- Si se reingrea una ficha de la barra central en un punto que solo tiene una ficha del otro juagdor se tienen que invetir, desarrollo d etodo esto
+- Verificacion del ganador
+
+- Implementacion de la regla del dado mayor, que solo pueda sacar fichas hacia la barra lateral con un adado exacto o mayor(solo si no hay fichas mas lejanas)
+
+- Separacion de la logica y eventos con el main donde solo esta la interaccion con el usuario
+- Agregacion de test en board
+- Agregacion de test en game
+
+- Añadi un metodo en game para el manejo de movimientos compuestos es decir que utiliza los dos dados, siempre y cuando el punto intermedio este libre
+- Añadi que se cierre la pantalla luego de 5 segundos que ya tenemos ganador
+- Cambie la manera en que se ven las fichas de afuera en la barra
+
+- Añadi validaciones 
+- Añadi test para llegar al porcentaje del coverage
+
+- Integracion del pylint
+- Integracion del docker
+- Actualizacion del archivo JUSTIFICACION y el README
+- Añadi y complete los archivos con doctings
+
+- Actualizacion del changelog
+- Actualizacion de prompts
+
+# Modificado 
+- Modificacion del tamaño de la pantalla
+- Visualizacion de como se ven en la barra, para que sean mas chicas y no se vea feo
+
+- Modificacion en el metodo "sacar_ficha" en game para que funcione con un dado mayor a la cantidad de posiciones que le faaltan a la ficha
+
+- Modifique la deteccion de clics en los puntos
+
+- Modifique la justificacion
+# Corregido
+
+- Correccion de colores de puntos para que esten invertidos los de abajo con los de arribba
+
+- Correcion en el cambio de turno que no me pasaba
+- Alineacion con los puntos y fichas
+
+- Correccion de que las fichas ingresen a la barra lateral y desaparezcan del tablero y se sumen en la barra
+
+- Correccion en el movimiento de fichas desde la barra central devuelta al tablero. Aveces reingresaba la ficha pero en un punto donde habia don de las enemigas y se cambiaba el color que eso no debe pasar
+
+- Correccion de que pase el turno en el ultimo cuadrante cuando ya el juagdor no tiene tiradas, e ingreso fichass en la barra lateral
+
+- Correccion en game de un metodo que me faltaba la validacion de un movimiento
+- Correccion en dice de el metodo "usar_tirada"
+
+- Corregi que la deteccion de clicks para el movimieento sea en la ficha no en el punto
+
+- Correccion del movimiento al ingresar a la barra lateral
+- Correccion de usar una excepcion personalizada en un metodo
+- Correccion del metodo "validar_ficha"
+
+# Eliminado 
+
+# Terminacion: 2025-11-01

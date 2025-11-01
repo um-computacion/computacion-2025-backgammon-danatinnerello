@@ -182,4 +182,8 @@ Definidas en `core/excepcions.py`:
    - Ej: Juego acepta cualquier implementación de Tablero/Dados
 
 ## Anexo: Diagrama de Clases
-![alt text](backgammon_uml_diagram.png)
+![alt text](backgammon_uml_diagram.png) esta en assert
+
+## Conclusión
+
+El diseño del proyecto cumple con los requisitos del proyecto, asegurando separación de responsabilidades, robustez mediante excepciones personalizadas y validación exhaustiva con tests. Además, se siguen los principios SOLID, lo que garantiza un código mantenible y extensible. La modularidad lograda permite futuras expansiones, como añadir una IA o la interfaz gráfica con Pygame, sin afectar la lógica central. 
