@@ -1,4 +1,4 @@
-************* Module main.py
-main.py:1:0: F0001: No module named main.py (fatal)
-************* Module test.py
-test.py:1:0: F0001: No module named test.py (fatal)
+[7;33m************* Module main.py[0m
+main.py:1:0: F0001: [1;4;31mNo module named main.py[0m ([1;4;31mfatal[0m)
+[7;33m************* Module test.py[0m
+test.py:1:0: F0001: [1;4;31mNo module named test.py[0m ([1;4;31mfatal[0m)
