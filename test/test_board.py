@@ -2,13 +2,14 @@ import unittest
 from core.board import Tablero
 from core.excepcions import MovimientoInvalidoError
 
+
 class TestTablero(unittest.TestCase):
     def setUp(self):
         self.tablero = Tablero()
-        #inicializamos el tablero
+        # inicializamos el tablero
 
     def test_mostrar_contenedor_devuelve_lista(self):
-        #testea que el contenedor sea una lista de 24 posiciones
+        # testea que el contenedor sea una lista de 24 posiciones
         contenedor = self.tablero.mostrar_contenedor()
         self.assertIsInstance(contenedor, list)
         self.assertEqual(len(contenedor), 24)
@@ -19,54 +20,53 @@ class TestTablero(unittest.TestCase):
         self.tablero.mover_ficha("Negra", 0, 1)
         self.assertIn(ficha_origen, self.tablero.mostrar_contenedor()[1])
 
-
     def test_mover_ficha_desde_vacio_lanza_error(self):
-        #nos devuelve error si queremos mover una ficha desde una posicion vacia
+        # nos devuelve error si queremos mover una ficha desde una posicion vacia
         with self.assertRaises(MovimientoInvalidoError):
             self.tablero.mover_ficha("Blanca", 2, 3)
 
     def test_mover_ficha_fuera_de_rango(self):
-        #nos devuelve error si queremos poner una ficha fuera del rango de posiciones
+        # nos devuelve error si queremos poner una ficha fuera del rango de posiciones
         with self.assertRaises(MovimientoInvalidoError):
             self.tablero.mover_ficha("Negra", 0, 30)
 
     def test_validar_movimiento_valido(self):
-        #Un movimiento válido a una casilla libre nos devuelve verdadero
+        # Un movimiento válido a una casilla libre nos devuelve verdadero
         tiradas = [1, 2]
         self.assertTrue(self.tablero.validar_movimiento("Negra", 0, 1, tiradas))
 
     def test_enviar_a_barra(self):
-        #si hay fichas en una posicion, debe enviarlas a la barra
+        # si hay fichas en una posicion, debe enviarlas a la barra
         self.tablero.enviar_a_barra(0)
         self.assertIn("Negra", self.tablero.mostrar_barra()["Negra"])
 
     def test_sacar_ficha_correcta(self):
-        #testea que pueda sacra ficha si el color en la posición coincide
+        # testea que pueda sacra ficha si el color en la posición coincide
         self.assertTrue(self.tablero.sacar_ficha("Negra", 0))
         self.assertIn("Negra", self.tablero.mostrar_afuera()["Negra"])
 
     def test_sacar_ficha_incorrecta(self):
-        #No permite sacar ficha si la posición está vacía o no coincide el color
+        # No permite sacar ficha si la posición está vacía o no coincide el color
         self.assertFalse(self.tablero.sacar_ficha("Negra", 5))  # posicion con blancas
- 
+
     def test_mover_ficha_desde_fuera_de_rango(self):
-        #testea que lance error si la posicion de origen esto fuera del rango
+        # testea que lance error si la posicion de origen esto fuera del rango
         with self.assertRaises(MovimientoInvalidoError):
             self.tablero.mover_ficha("Negra", -1, 5)
 
     def test_enviar_a_barra_posicion_vacia(self):
-        #Si la posicion esta vacia, no debe agregar nada a la barra
+        # Si la posicion esta vacia, no debe agregar nada a la barra
         self.tablero.enviar_a_barra(2)  # posicion vacia
         self.assertEqual(self.tablero.mostrar_barra()["Blanca"], [])
         self.assertEqual(self.tablero.mostrar_barra()["Negra"], [])
 
     def test_mover_desde_barra_sin_fichas(self):
-        #si no hay fichas en la barra, no se debe mover nada
+        # si no hay fichas en la barra, no se debe mover nada
         resultado = self.tablero.valida_mover_desde_barra("Blanca", 0)
         self.assertFalse(resultado)
 
     def test_mover_desde_barra_con_ficha_valida(self):
-        #mueve una ficha desde la barra a una posicion valida
+        # mueve una ficha desde la barra a una posicion valida
         self.tablero.mostrar_barra()["Blanca"].append("Blanca")
         valido = self.tablero.valida_mover_desde_barra("Blanca", 22)
         self.assertTrue(valido)
@@ -74,9 +74,8 @@ class TestTablero(unittest.TestCase):
             self.tablero.aplicar_movimiento_desde_barra("Blanca", 22)
         self.assertIn("Blanca", self.tablero.mostrar_contenedor()[22])
 
-
     def test_sacar_ficha_color_incorrecto(self):
-        #si el color en la posición no coincide, no debe sacar ficha
+        # si el color en la posición no coincide, no debe sacar ficha
         # en la posición 5 hay fichas blancas
         resultado = self.tablero.sacar_ficha("Negra", 5)
         self.assertFalse(resultado)
@@ -170,13 +169,15 @@ class TestTablero(unittest.TestCase):
 
     def test_mover_ficha_color_incorrecto(self):
         # Intenta mover la ficha que no es tuya (ej: Blanca intenta mover Negras en punto 1)
-        with self.assertRaisesRegex(MovimientoInvalidoError, "Esa ficha no te pertenece"):
+        with self.assertRaisesRegex(
+            MovimientoInvalidoError, "Esa ficha no te pertenece"
+        ):
             self.tablero.mover_ficha("Blanca", 0, 1)
 
     def test_mover_ficha_destino_bloqueado(self):
         # Mover Negras de 0 a 2. Posición 2 tiene 2 Blancas (bloqueo).
         self.tablero.mostrar_contenedor()[2] = ["Blanca", "Blanca"]
-        with self.assertRaises(MovimientoInvalidoError): 
+        with self.assertRaises(MovimientoInvalidoError):
             self.tablero.mover_ficha("Negra", 0, 2)
 
     def test_validar_movimiento_sentido_incorrecto(self):
@@ -188,10 +189,10 @@ class TestTablero(unittest.TestCase):
         # Intenta mover 5 espacios, pero solo queda dado 1.
         tiradas = [1]
         self.assertFalse(self.tablero.validar_movimiento("Negra", 0, 5, tiradas))
-    
+
     def test_validar_movimiento_destino_bloqueado(self):
         # Colocar 2 fichas enemigas en destino. Comprueba el retorno False.
-        self.tablero.mostrar_contenedor()[0] = ["Negra", "Negra"] 
+        self.tablero.mostrar_contenedor()[0] = ["Negra", "Negra"]
         # Mover Blanca de 5 a 0 (inválido). tiradas_restantes debe ser None para probar la rama más general.
         self.assertFalse(self.tablero.validar_movimiento("Blanca", 5, 0))
 
@@ -199,7 +200,10 @@ class TestTablero(unittest.TestCase):
         # Comprueba la rama donde tiradas_restantes no se pasa (es None) en el método valida_mover_desde_barra.
         self.tablero.mostrar_barra()["Blanca"].append("Blanca")
         # El método debe devolver True si la posición está libre, ignorando las tiradas
-        self.assertTrue(self.tablero.valida_mover_desde_barra("Blanca", 22, tiradas_restantes=None))
+        self.assertTrue(
+            self.tablero.valida_mover_desde_barra("Blanca", 22, tiradas_restantes=None)
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

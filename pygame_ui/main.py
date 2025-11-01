@@ -12,7 +12,7 @@ import pygame
 from pygame_ui.board_renderer import TableroGrafico, estado_desde_board
 from core.game import Juego
 from core.player import Jugador
-from pygame_ui.events import ManejadorEventos # Importar el nuevo manejador
+from pygame_ui.events import ManejadorEventos  # Importar el nuevo manejador
 from core.excepcions import MovimientoInvalidoError, RendicionError, JuegoTerminadoError
 
 pygame.init()
@@ -93,11 +93,13 @@ def dibujar_panel_inferior(pantalla, juego, mensaje=""):
 
     texto_barra = FUENTE.render(
         f"Barra → Blancas: {len(barra['Blanca'])} | Negras: {len(barra['Negra'])}",
-        True, COLOR_TEXTO
+        True,
+        COLOR_TEXTO,
     )
     texto_afuera = FUENTE.render(
         f"Afuera → Blancas: {len(afuera['Blanca'])} | Negras: {len(afuera['Negra'])}",
-        True, COLOR_TEXTO
+        True,
+        COLOR_TEXTO,
     )
     pantalla.blit(texto_barra, (600, ALTO_TABLERO + 20))
     pantalla.blit(texto_afuera, (600, ALTO_TABLERO + 50))
@@ -115,7 +117,7 @@ def dibujar_todo(pantalla, renderer, juego, mensaje_ui=""):
     renderer.dibujar_barra(juego.mostrar_tablero())
     renderer.dibujar_barra_lateral(juego.mostrar_tablero())
     dibujar_panel_inferior(pantalla, juego, mensaje_ui)
-    pygame.display.flip() # Asegurar que la pantalla se actualiza
+    pygame.display.flip()  # Asegurar que la pantalla se actualiza
 
 
 def main():
@@ -126,14 +128,14 @@ def main():
 
         jugador1 = Jugador(nombre1, "Blanca")
         jugador2 = Jugador(nombre2, "Negra")
-        
+
         # La validación de nombres ocurre AQUÍ al crear el objeto Juego:
-        juego = Juego(jugador1, jugador2) 
-        
+        juego = Juego(jugador1, jugador2)
+
     except MovimientoInvalidoError as e:
         print(f"Error de inicialización: {e}")
-        return # Sale si la inicialización falla
-   
+        return  # Sale si la inicialización falla
+
     juego.__dados__.tirar_dados()  # Primera tirada (inicia el juego)
 
     pantalla = pygame.display.set_mode((ANCHO_PANTALLA, ALTO_PANTALLA))
@@ -141,55 +143,57 @@ def main():
 
     renderer = TableroGrafico(pantalla, alto_tablero=ALTO_TABLERO)
     reloj = pygame.time.Clock()
-    
+
     # Crear la instancia del manejador de eventos
     manejador = ManejadorEventos(juego, renderer)
-    
+
     # Mensaje inicial con la primera tirada
     manejador._actualizar_mensaje(
-        f"Turno de {juego.mostrar_turno().obtener_nombre()} - Tira: {juego.__dados__.obtener_tiradas_restantes()}", 
-        2500
+        f"Turno de {juego.mostrar_turno().obtener_nombre()} - Tira: {juego.__dados__.obtener_tiradas_restantes()}",
+        2500,
     )
 
     running = True
     while running:
         dt = reloj.tick(30)
-        
+
         if manejador.ganador is not None:
             # Comprueba si han pasado 5 segundos (5000 ms) desde que se declaró el ganador
             tiempo_actual = pygame.time.get_ticks()
-            if tiempo_actual - manejador.tiempo_fin_juego > manejador.duracion_mensaje_final:
-                running = False # Detiene el bucle principal y cierra el juego
-                continue # Saltar el resto del bucle
-       
+            if (
+                tiempo_actual - manejador.tiempo_fin_juego
+                > manejador.duracion_mensaje_final
+            ):
+                running = False  # Detiene el bucle principal y cierra el juego
+                continue  # Saltar el resto del bucle
+
         # Tira nuevos dados solo si los anteriores están agotados Y el juego NO ha terminado.
-        if not juego.__dados__.obtener_tiradas_restantes() and manejador.ganador is None:
+        if (
+            not juego.__dados__.obtener_tiradas_restantes()
+            and manejador.ganador is None
+        ):
             jugador_actual = juego.mostrar_turno()
             juego.__dados__.tirar_dados()
-            
+
             manejador._actualizar_mensaje(
                 f"Turno de {jugador_actual.obtener_nombre()} - Tira: {juego.__dados__.obtener_tiradas_restantes()}",
-                2500 # Mostrar por 2.5 segundos
+                2500,  # Mostrar por 2.5 segundos
             )
 
         # Llamar al manejador de eventos
         manejador.manejar_eventos(dt)
         running = manejador.running
-        
+
         # Dibujar con el estado actual del manejador
         dibujar_todo(pantalla, renderer, juego, manejador.mensaje_ui)
-        
+
     pygame.quit()
 
 
 if __name__ == "__main__":
     main()
 
-#me falta:
-#pylint
-#docker
-#completar documentacionn
-#pulir detalles
-
-
-
+# me falta:
+# docker
+# completar documentacionn
+# pulir detalles
