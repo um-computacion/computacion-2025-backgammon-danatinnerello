@@ -1,81 +1,185 @@
-
-# JUSTIFICACION 
-
-Este documento detalla las decisiones de diseño y las estrategias de desarrollo tomadas para la creacion del juego de Backgammon. El objetivo es justificar la estructura del proyecto y demostrar una comprension profunda de las elecciones realizadas.
+# Justificación del Diseño - Backgammon
 
 ## Resumen del Diseño General
 
-El proyecto se penso con un enfoque en la **separación de la logica del negocio y la capa de presentacion**. Esto significa que el núcleo del juego, que maneja las reglas y la mecanica, es completamente independiente de como se muestra al usuario. Este enfoque modular permite implementar multiples interfaces de usuario (como la interfaz de linea de comandos y la grafica con Pygame) sin necesidad de modificar el codigo central.
+El proyecto implementa el juego de Backgammon siguiendo una arquitectura modular que separa:
 
-El diseño del juego se basa en el paradigma de la Programación Orientada a Objetos (POO), con clases bien definidas que representan los componentes clave del Backgammon. Esto no solo facilita el desarrollo y el mantenimiento, sino que también nos permite adherirnos a principios como los SOLID.
+- **Lógica central** (core/): Maneja reglas y estado del juego
+- **Interfaces de usuario**: 
+  - CLI (cli/): Interfaz por consola
+  - GUI (pygame_ui/): Interfaz gráfica con Pygame
 
-## Justificación de las Clases Elegidas
+Esta separación permite cambiar las interfaces sin modificar la lógica del juego.
 
-Las siguientes clases se han definido para modelar el juego, con el objetivo de asignar una unica responsabilidad a cada una, de acuerdo con el **Principio de Responsabilidad Unica (SRP)**.
+## Justificación de las Clases
 
-* `Juego`: Esta clase actua como el **coordinador principal** del juego. Su responsabilidad es gestionar el flujo de la partida, los turnos de los jugadores y las interacciones entre los diferentes componentes, como el tablero y los dados.
-* `Tablero`: Representa el tablero fisico del Backgammon. Su función es gestionar los 24 puntos (triangulos), las fichas en cada punto, y las areas especiales como la barra central y el area de "home"(que seria cuando las fichas ya salen del tablero).
-* `Jugador`: Modela a un jugador individual. Contiene información como el color de las fichas y la logica para gestionar los movimientos del jugador.
-* `Dados`: Se encarga de la logica de los dados. Su unica responsabilidad es simular las tiradas, incluyendo la funcionalidad especial de las tiradas dobles.
-* `Ficha`: Representa una sola ficha del juego. Tener una clase separada para las fichas permite gestionar de forma individual las propiedades de cada una, como su posición y color.
-* `CLI` y `PygameUI`: Estas clases son las **capas de presentación** del juego. `CLI` se encarga de la interacción basada en texto en la consola, mientras que `PygameUI` maneja la interfaz gráfica. Su separación del `core` demuestra el cumplimiento del Principio de Responsabilidad Única.
+### Core
 
-## Justificación de Atributos y Decisiones de Diseño Relevantes
+- **Juego**: Controlador principal que coordina jugadores, tablero y dados
+  - Responsabilidad: Gestionar turnos y validar movimientos
+  - Justificación: Necesario para centralizar la lógica del juego
 
-Todos los atributos de las clases siguen la convención de `__nombre__` para indicar que son parte interna de la clase y un atributo privado, de acuerdo con las buenas practicas establecidas en la consigna.
+- **Tablero**: Representa el estado físico del tablero
+  - Responsabilidad: Mantener posición de fichas y validar movimientos básicos
+  - Justificación: Encapsula la lógica específica del tablero
 
-Ejemplos concretos:  
-* `__tablero__` en `Juego`: centraliza el estado de la partida y facilita la validación de jugadas.  
-* `__fichas__` en `Jugador`: permite llevar control preciso de cuántas fichas restan y dónde se ubican.  
-* `__valores__` en `Dados`: guarda los resultados de la tirada para que se usen en una misma jugada.  
-* `__color__` en `Jugador`: distingue inequívocamente a los jugadores y evita confusión en movimientos.  
+- **Jugador**: Representa a cada jugador
+  - Responsabilidad: Mantener estado del jugador (color, fichas restantes)
+  - Justificación: Encapsula atributos y comportamiento específico de jugadores
 
-**Decisiones clave**:  
-* **Desarrollo incremental**: commits distribuidos que muestran evolución constante.  
-* **Separación de capas**: el `core` nunca depende de la interfaz, lo que permite escalar fácilmente a nuevas formas de interacción.  
-* **Diseño extensible**: al estar basado en clases desacopladas, se puede añadir una IA o nuevas variantes sin romper el diseño actual.  
+- **Dados**: Maneja la lógica de dados y tiradas
+  - Responsabilidad: Generar valores aleatorios y gestionar tiradas disponibles
+  - Justificación: Separa la lógica de dados del resto del juego
+
+### Interfaces
+
+- **TableroGrafico**: Renderiza el tablero en Pygame
+  - Responsabilidad: Dibujar componentes visuales
+  - Justificación: Separa la lógica de renderizado
+
+- **ManejadorEventos**: Procesa entrada del usuario en Pygame
+  - Responsabilidad: Traducir eventos a acciones del juego
+  - Justificación: Desacopla la entrada de usuario de la lógica
+
+## Justificación de Atributos
+
+### Juego
+- `__tablero__`: Instancia del tablero actual. Necesario para mantener y consultar el estado del juego
+- `__jugador1__`: Referencia al primer jugador (Blancas)
+- `__jugador2__`: Referencia al segundo jugador (Negras)
+- `__jugadores__`: Lista con ambos jugadores para facilitar iteración y verificación de ganador
+- `__dados__`: Instancia de dados para gestionar tiradas disponibles
+- `__turno__`: Jugador actual, necesario para controlar el flujo del juego
+- `__juego_terminado__`: Booleano que indica si alguien ganó, evita movimientos post-victoria
+
+### Tablero
+- `__contenedor__`: Lista de 24 posiciones que representa los puntos del tablero
+- `__barra__`: Diccionario para fichas capturadas {"Blanca": [], "Negra": []}
+- `__afuera__`: Diccionario para fichas sacadas {"Blanca": [], "Negra": []}
+
+### Jugador
+- `__nombre__`: String con el nombre del jugador para UI
+- `__color__`: String ("Blanca"/"Negra") para identificar fichas
+- `__fichas__`: Total de fichas iniciales (15)
+- `__fichas_restantes__`: Contador de fichas aún no sacadas, necesario para determinar victoria
+
+### Dados
+- `__tiradas_restantes__`: Lista de números disponibles para mover
+- `__rng__`: Generador de números aleatorios (para testing)
+
+### TableroGrafico (Pygame)
+- `pantalla`: Superficie de Pygame donde dibujar
+- `ancho`, `alto`: Dimensiones del tablero
+- `ancho_triangulo`, `ancho_barra`: Medidas para dibujar elementos
+- `alto_triangulo`: Altura de los triángulos (puntos)
+- `radio_ficha`: Radio de las fichas para dibujo y detección de clicks
+
+### ManejadorEventos (Pygame)
+- `juego`: Referencia al controlador principal
+- `renderer`: Referencia al TableroGrafico
+- `mensaje_ui`: Texto actual a mostrar en pantalla
+- `tiempo_mensaje`: Duración del mensaje actual
+- `punto_origen`: Punto seleccionado para mover (None si no hay selección)
+- `running`: Control del bucle principal
+- `ganador`: Referencia al jugador ganador si existe
+- `tiempo_fin_juego`: Para controlar cierre de ventana post-victoria
+
+## Decisiones de Diseño Relevantes
+
+1. **Separación Core/UI**: 
+   - La lógica del juego es independiente de la interfaz
+   - Permite agregar nuevas interfaces sin modificar el core
+
+2. **Estado Inmutable**: 
+   - Los cambios de estado se validan antes de aplicarse
+   - Evita estados inválidos
+
+3. **Validación en Capas**:
+   - Juego valida reglas de alto nivel
+   - Tablero valida movimientos básicos
+   - Mejor mantenibilidad y testing
 
 ## Excepciones y Manejo de Errores
 
-Se diseñaron excepciones personalizadas que mejoran la claridad del código y evitan errores silenciosos. Algunas de ellas son:  
+Definidas en `core/excepcions.py`:
 
-* `MovimientoInvalidoError`: cuando un jugador intenta hacer un movimiento que no respeta las reglas.  
-* `SacarFichaError`: cuando se intenta retirar una ficha sin cumplir las condiciones necesarias.  
-* `JugadorInvalidoError`: asegura que solo los jugadores válidos puedan interactuar con el sistema.  
+### MovimientoInvalidoError
+- Lanzada cuando un movimiento viola reglas básicas:
+  - Mover en dirección incorrecta
+  - Mover a un punto bloqueado (2+ fichas enemigas)
+  - Mover una ficha que no pertenece al jugador
+  - Mover sin dados disponibles
+  - Mover desde/hacia posiciones fuera del tablero
+  - Nombres de jugadores inválidos o duplicados
 
-Estas excepciones permiten controlar los flujos de error desde la interfaz (`CLI`) y brindar mensajes claros al usuario, mejorando la experiencia y evitando bloqueos inesperados.  
+### SacarFichaError
+- Lanzada al intentar sacar fichas ilegalmente:
+  - Sacar cuando hay fichas fuera del último cuadrante
+  - Sacar usando un dado mayor cuando hay fichas más lejanas
+  - Sacar desde un punto sin fichas propias
+  - Fallo interno del tablero al sacar
 
-## Estrategias de Testing y Cobertura
+### EntradaInvalidaError
+- Lanzada por errores de input del usuario:
+  - Coordenadas fuera de rango (1-24)
+  - Entrada no numérica cuando se espera un número
+  - Selección de opción inválida en menús
 
-Para garantizar la calidad y robustez del código, se ha adoptado una estrategia de testing rigurosa.  
+### RendicionError
+- Lanzada cuando un jugador elige rendirse
+- Permite terminar el juego prematuramente
 
-* **Pruebas Unitarias (nivel core):** verifican casos como:  
-  - movimientos válidos e inválidos,  
-  - reingreso desde la barra,  
-  - salida de fichas,  
-  - condición de victoria.  
+### JuegoTerminadoError
+- Lanzada cuando se solicita terminar el juego
+- Diferente de RendicionError para distinguir fin normal vs rendición
 
-* **Pruebas de Integración (CLI):** comprueban que los mensajes mostrados y entradas de usuario se correspondan con el estado real del juego.  
+## Estrategias de Testing
 
-* **Cobertura:** el objetivo es superar el **90% de cobertura** en la lógica central. Esto garantiza que se validen los escenarios principales y también los casos límite.  
+### Cobertura
 
-*Ejemplo:* un test que comprueba que al sacar una ficha con un dado mayor al número de posiciones restantes se permita la jugada si todas las fichas están en el cuadrante final.  
+- Tests unitarios para cada clase del core
+- Tests de integración para interacciones entre clases
+- Tests específicos para casos borde y situaciones especiales
 
-## Referencias a Requisitos SOLID
+### Áreas Principales Testeadas
 
-El diseño del proyecto se alinea con los principios SOLID para garantizar un codigo limpio, extensible y fácil de mantener.
+1. **Movimientos**:
+   - Movimientos válidos/inválidos
+   - Capturas
+   - Reingreso desde barra
+   - Sacar fichas
 
-* **S (Single Responsibility Principle)**: Cada clase tiene una unica y clara responsabilidad, como se detallo en la seccion de justificacion de clases.
-* **O (Open/Closed Principle)**: El codigo esta diseñado para ser extensible sin necesidad de modificar el codigo existente. 
-* **L (Liskov Substitution Principle)**: Si se crearan subclases de `Jugador` (por ejemplo, `HumanPlayer` y `AIPlayer`), podrían ser usadas indistintamente por la clase `Juego` sin romper la funcionalidad.
-* **I (Interface Segregation Principle)**: La interfaz CLI expone solo los métodos necesarios para interactuar con el usuario, sin sobrecargarlo de operaciones irrelevantes.  
-* **D (Dependency Inversion Principle)**: La logica de alto nivel (`Juego`) no depende de las implementaciones concretas de la interfaz (`CLI`, `PygameUI`), sino de abstracciones. Esto se logra mediante la separación de las capas.
+2. **Dados**:
+   - Generación de valores
+   - Consumo de tiradas
+   - Manejo de dobles
 
-## Anexos
+3. **Estado del Juego**:
+   - Cambios de turno
+   - Detección de ganador
+   - Validaciones de entrada
 
-### Diagrama de Clases (simplificado)
-![alt text](diagrama_clases_backgammon.png)
+## Principios SOLID
 
-## Conclusión
+1. **Single Responsibility (SRP)**:
+   - Cada clase tiene una única responsabilidad
+   - Ej: Tablero solo maneja estado, Dados solo manejan tiradas
 
-El diseño del proyecto cumple con los requisitos del proyecto, asegurando separación de responsabilidades, robustez mediante excepciones personalizadas y validación exhaustiva con tests. Además, se siguen los principios SOLID, lo que garantiza un código mantenible y extensible. La modularidad lograda permite futuras expansiones, como añadir una IA o la interfaz gráfica con Pygame, sin afectar la lógica central.  
+2. **Open/Closed (OCP)**:
+   - Extensible sin modificar código existente
+   - Ej: Nuevas interfaces de usuario
+
+3. **Liskov Substitution (LSP)**:
+   - Las interfaces son consistentes
+   - Ej: Cualquier UI puede usar el core sin modificarlo
+
+4. **Interface Segregation (ISP)**:
+   - Interfaces pequeñas y específicas
+   - Ej: Separación entre lógica de juego y renderizado
+
+5. **Dependency Inversion (DIP)**:
+   - Core no depende de implementaciones específicas
+   - Ej: Juego acepta cualquier implementación de Tablero/Dados
+
+## Anexo: Diagrama de Clases
+![alt text](backgammon_uml_diagram.png)
