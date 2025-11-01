@@ -1,4 +1,4 @@
-# Backgammon - Proyecto Final Computación 2
+# Backgammon - Proyecto Final Computación 
 
 ## Descripción
 
