@@ -284,7 +284,6 @@ y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 - Añadi test para llegar al porcentaje del coverage
 
 - Integracion del pylint
-- Integracion del docker
 - Actualizacion del archivo JUSTIFICACION y el README
 - Añadi y complete los archivos con doctings
 
